@@ -1,0 +1,17 @@
+--extra-index-url https://download.pytorch.org/whl/cu118
+torch==2.3.0+cu118
+torchvision==0.18.0+cu118
+transformers>=4.47.0
+accelerate
+decord
+Pillow
+numpy
+pandas
+openai
+tenacity
+einops
+timm
+sentencepiece
+tabulate
+# flash-attn: install separately with the precompiled wheel to avoid GCC/CUDA build issues:
+# pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.6.3/flash_attn-2.6.3+cu118torch2.3cxx11abiFALSE-cp310-cp310-linux_x86_64.whl

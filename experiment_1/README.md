@@ -22,14 +22,22 @@ cp _egoblind_repo/eval.py .
 cp /path/to/test_half_release.csv data/test_half_release.csv
 ```
 
-### 3. Create the conda environment
+### 3. Create the environment
+
+The conda solver hangs on Palmetto when resolving pytorch/nvidia channels. Use a bare
+conda env for Python only, then install everything via pip:
 
 ```bash
-conda env create -f environment.yaml
+conda create -n egoblind_exp1 python=3.10 -y
 conda activate egoblind_exp1
+pip install -r requirements.txt
+```
 
-# InternVL2.5 requires flash-attn — build separately after activating env:
-pip install flash-attn --no-build-isolation
+InternVL2.5 requires `flash-attn`. Building from source fails on Palmetto due to
+GCC/CUDA version constraints. Install the precompiled wheel instead:
+
+```bash
+pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.6.3/flash_attn-2.6.3+cu118torch2.3cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
 ```
 
 ### 4. Pre-download all 5 models (do this on an interactive node with internet access)
@@ -38,21 +46,8 @@ pip install flash-attn --no-build-isolation
 srun --pty --partition=work1 --mem=32G --time=02:00:00 bash
 conda activate egoblind_exp1
 source /jjtribb/LLM_Hallucinations/experiment_1/scripts/set_cache_dirs.sh
-python -c "
-from transformers import AutoProcessor, AutoModelForVision2Seq
-models = [
-    'DAMO-NLP-SG/VideoLLaMA3-7B',
-    'OpenGVLab/InternVL2_5-8B',
-    'lmms-lab/llava-onevision-qwen2-7b-ov',
-    'Qwen/Qwen2.5-VL-7B-Instruct',
-    'openbmb/MiniCPM-V-2_6',
-]
-for m in models:
-    print(f'Downloading {m}...')
-    AutoProcessor.from_pretrained(m, trust_remote_code=True)
-    AutoModelForVision2Seq.from_pretrained(m, trust_remote_code=True)
-    print(f'Done: {m}')
-"
+cd /jjtribb/LLM_Hallucinations/experiment_1
+python scripts/preload.py
 exit
 ```
 
