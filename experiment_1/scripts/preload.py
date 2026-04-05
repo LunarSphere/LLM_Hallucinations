@@ -50,13 +50,6 @@ MODELS = [
         "processor_cls": AutoProcessor,
         "trust_remote_code": False,
     },
-    {
-        "name": "MiniCPM-V-2_6",
-        "model_id": "openbmb/MiniCPM-V-2_6",
-        "model_cls": AutoModel,
-        "processor_cls": AutoTokenizer,
-        "trust_remote_code": True,
-    },
 ]
 
 

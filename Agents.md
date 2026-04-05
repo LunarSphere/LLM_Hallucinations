@@ -56,7 +56,6 @@ The paper uses **GPT-4o mini as a judge** — comparing each model's prediction 
 | Video-LLaMA3 | 49.2% |
 | LLaVA-OV | 54.5% |
 | Qwen2.5-VL | 45.5% |
-| MiniCPM-V 2.6 | 40.7% |
 | Video-LLaVA | 38.1% |
 | LLaMA-VID | 39.1% |
 | ShareGPT4Video | 32.9% |
@@ -83,7 +82,6 @@ if you could write a one use script or command  to sort all the .mp4 file into a
 - `OpenGVLab/InternVL2_5-8B`
 - `lmms-lab/llava-onevision-qwen2-7b-ov`
 - `Qwen/Qwen2.5-VL-7B-Instruct`
-- `openbmb/MiniCPM-V-2_6`
 
 *New models (not in the paper):*
 we will get to this later.

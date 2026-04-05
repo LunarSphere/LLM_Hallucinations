@@ -57,7 +57,7 @@ def is_unanswerable_gt(row) -> bool:
     return False
 
 
-MODEL_NAMES = ["videollama3", "internvl2_5", "llava_onevision", "qwen2_5_vl", "minicpm_v"]
+MODEL_NAMES = ["videollama3", "internvl2_5", "llava_onevision", "qwen2_5_vl"]
 
 # Paper-reported overall accuracy for reference
 PAPER_ACCURACY = {
@@ -65,7 +65,6 @@ PAPER_ACCURACY = {
     "internvl2_5":    53.5,
     "llava_onevision": 54.5,
     "qwen2_5_vl":     45.5,
-    "minicpm_v":      40.7,
 }
 
 

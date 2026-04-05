@@ -14,7 +14,7 @@ Usage:
         --num_frames 16
 
 Supported --model values:
-    videollama3, internvl2_5, llava_onevision, qwen2_5_vl, minicpm_v
+    videollama3, internvl2_5, llava_onevision, qwen2_5_vl
 """
 
 import argparse
@@ -213,30 +213,6 @@ def infer_qwen2_5_vl(model, processor, frames: list, question: str) -> str:
     return processor.decode(generated[0], skip_special_tokens=True).strip()
 
 
-def load_minicpm_v(model_id: str):
-    from transformers import AutoTokenizer, AutoModel
-    tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
-    model = AutoModel.from_pretrained(
-        model_id, torch_dtype=torch.bfloat16, device_map="auto", trust_remote_code=True
-    )
-    model.eval()
-    return model, tokenizer
-
-
-def infer_minicpm_v(model, tokenizer, frames: list, question: str) -> str:
-    prompt = PROMPT_TEMPLATE.format(question=question)
-    # MiniCPM-V accepts a list of images + text in the message content
-    msgs = [{"role": "user", "content": frames + [prompt]}]
-    response = model.chat(
-        image=None,
-        msgs=msgs,
-        tokenizer=tokenizer,
-        sampling=False,
-        max_new_tokens=128,
-    )
-    return response.strip()
-
-
 # ─── Model registry ───────────────────────────────────────────────────────────
 
 MODEL_REGISTRY = {
@@ -259,11 +235,6 @@ MODEL_REGISTRY = {
         "model_id": "Qwen/Qwen2.5-VL-7B-Instruct",
         "load_fn": load_qwen2_5_vl,
         "infer_fn": infer_qwen2_5_vl,
-    },
-    "minicpm_v": {
-        "model_id": "openbmb/MiniCPM-V-2_6",
-        "load_fn": load_minicpm_v,
-        "infer_fn": infer_minicpm_v,
     },
 }
 

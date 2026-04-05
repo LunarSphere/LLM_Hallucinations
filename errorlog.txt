@@ -1,0 +1,103 @@
+python scripts/preload.py 
+Disabling PyTorch because PyTorch >= 2.4 is required but found 2.3.0+cu118
+PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+
+[VideoLLaMA3] Downloading processor from DAMO-NLP-SG/VideoLLaMA3-7B ...
+Encountered exception while importing cv2: No module named 'cv2'
+Encountered exception while importing ffmpeg: No module named 'ffmpeg'
+Encountered exception while importing imageio: No module named 'imageio'
+Encountered exception while importing requests: No module named 'requests'
+^C[VideoLLaMA3] ERROR: This modeling file requires the following packages that were not found in your environment: cv2, ffmpeg, imageio, requests. Run `pip install cv2 ffmpeg imageio requests`
+
+[InternVL2_5-8B] Downloading processor from OpenGVLab/InternVL2_5-8B ...
+^C^CCould not extract SentencePiece model from /home/jjtribb/.cache/huggingface/hub/models--OpenGVLab--InternVL2_5-8B/snapshots/e9e4c0dc1db56bfab10458671519b7fa3dd29463/tokenizer.model using sentencepiece library due to 
+SentencePieceExtractor requires the protobuf library but it was not found in your environment. Check out the instructions on the
+installation page of its repo: https://github.com/protocolbuffers/protobuf/tree/master/python#installation and follow the ones
+that match your environment. Please note that you may need to restart your runtime after installation.
+. Falling back to TikToken extractor.
+[InternVL2_5-8B] ERROR: `tiktoken` is required to read a `tiktoken` file. Install it with `pip install tiktoken`.
+
+[LLaVA-OneVision] Downloading processor from lmms-lab/llava-onevision-qwen2-7b-ov ...
+^C^C^C[LLaVA-OneVision] Processor done. Downloading model weights ...
+[LLaVA-OneVision] ERROR: 
+LlavaOnevisionForConditionalGeneration requires the PyTorch library but it was not found in your environment. Check out the instructions on the
+installation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.
+Please note that you may need to restart your runtime after installation.
+
+
+[Qwen2.5-VL] Downloading processor from Qwen/Qwen2.5-VL-7B-Instruct ...
+config.json: 1.37kB [00:00, 6.42MB/s]
+tokenizer_config.json: 5.70kB [00:00, 31.1MB/s]
+vocab.json: 2.78MB [00:00, 11.6MB/s]
+merges.txt: 1.67MB [00:00, 12.4MB/s]
+tokenizer.json: 7.03MB [00:00, 18.4MB/s]
+[Qwen2.5-VL] ERROR: 
+Qwen2VLVideoProcessor requires the PyTorch library but it was not found in your environment. Check out the instructions on the
+installation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.
+Please note that you may need to restart your runtime after installation.
+
+Qwen2VLVideoProcessor requires the Torchvision library but it was not found in your environment. Check out the instructions on the
+installation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.
+Please note that you may need to restart your runtime after installation.
+
+
+[MiniCPM-V-2_6] Downloading processor from openbmb/MiniCPM-V-2_6 ...
+[MiniCPM-V-2_6] ERROR: You are trying to access a gated repo.
+Make sure to have access to it at https://huggingface.co/openbmb/MiniCPM-V-2_6.
+403 Client Error. (Request ID: Root=1-69d2ead2-6bf2b7622fce89b62deadace;17bfeb83-fc88-4bf4-9912-fbf028287e64)
+
+Cannot access gated repo for url https://huggingface.co/openbmb/MiniCPM-V-2_6/resolve/main/config.json.
+Access to model openbmb/MiniCPM-V-2_6 is restricted and you are not in the authorized list. Visit https://huggingface.co/openbmb/MiniCPM-V-2_6 to ask for access.
+
+==================================================
+Download summary:
+  ✗ VideoLLaMA3: FAILED — ImportError: This modeling file requires the following packages that were not found in your environment: cv2, ffmpeg, imageio, requests. Run `pip install cv2 ffmpeg imageio requests`
+  ✗ InternVL2_5-8B: FAILED — ValueError: `tiktoken` is required to read a `tiktoken` file. Install it with `pip install tiktoken`.
+  ✗ LLaVA-OneVision: FAILED — ImportError: 
+LlavaOnevisionForConditionalGeneration requires the PyTorch library but it was not found in your environment. Check out the instructions on the
+installation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.
+Please note that you may need to restart your runtime after installation.
+
+  ✗ Qwen2.5-VL: FAILED — ImportError: 
+Qwen2VLVideoProcessor requires the PyTorch library but it was not found in your environment. Check out the instructions on the
+installation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.
+Please note that you may need to restart your runtime after installation.
+
+Qwen2VLVideoProcessor requires the Torchvision library but it was not found in your environment. Check out the instructions on the
+installation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.
+Please note that you may need to restart your runtime after installation.
+
+  ✗ MiniCPM-V-2_6: FAILED — OSError: You are trying to access a gated repo.
+Make sure to have access to it at https://huggingface.co/openbmb/MiniCPM-V-2_6.
+403 Client Error. (Request ID: Root=1-69d2ead2-6bf2b7622fce89b62deadace;17bfeb83-fc88-4bf4-9912-fbf028287e64)
+
+Cannot access gated repo for url https://huggingface.co/openbmb/MiniCPM-V-2_6/resolve/main/config.json.
+Access to model openbmb/MiniCPM-V-2_6 is restricted and you are not in the authorized list. Visit https://huggingface.co/openbmb/MiniCPM-V-2_6 to ask for access.
+
+5 model(s) failed. Re-run to retry, or check the error above.
+(exp1) [jjtribb@nodeai01 experiment_1]$ pip uninstall torch torchvision torchaudio
+Found existing installation: torch 2.3.0+cu118
+Uninstalling torch-2.3.0+cu118:
+  Would remove:
+    /home/jjtribb/.conda/envs/exp1/bin/convert-caffe2-to-onnx
+    /home/jjtribb/.conda/envs/exp1/bin/convert-onnx-to-caffe2
+    /home/jjtribb/.conda/envs/exp1/bin/torchrun
+    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/functorch/*
+    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torch-2.3.0+cu118.dist-info/*
+    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torch/*
+    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torchgen/*
+Proceed (Y/n)? y
+  Successfully uninstalled torch-2.3.0+cu118
+Found existing installation: torchvision 0.18.0+cu118
+Uninstalling torchvision-0.18.0+cu118:
+  Would remove:
+    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torchvision-0.18.0+cu118.dist-info/*
+    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torchvision.libs/libcudart.60cfec8e.so.11.0
+    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torchvision.libs/libjpeg.ceea7512.so.62
+    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torchvision.libs/libnvjpeg.70530407.so.11
+    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torchvision.libs/libpng16.7f72a3c5.so.16
+    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torchvision.libs/libz.4100288c.so.1
+    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torchvision/*
+Proceed (Y/n)? y
+  Successfully uninstalled torchvision-0.18.0+cu118

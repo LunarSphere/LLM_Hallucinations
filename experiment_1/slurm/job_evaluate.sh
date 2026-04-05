@@ -25,7 +25,7 @@ cd /jjtribb/LLM_Hallucinations/experiment_1
 mkdir -p outputs/evaluations
 
 # Run eval.py (from EgoBlind repo, cloned into experiment_1/) for each model
-for model in videollama3 internvl2_5 llava_onevision qwen2_5_vl minicpm_v; do
+for model in videollama3 internvl2_5 llava_onevision qwen2_5_vl; do
     pred_file="outputs/predictions/${model}.jsonl"
     if [ -f "$pred_file" ]; then
         echo "Evaluating $model..."

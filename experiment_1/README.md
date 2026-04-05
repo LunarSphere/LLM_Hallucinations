@@ -37,7 +37,7 @@ InternVL2.5 requires `flash-attn`. Building from source fails on Palmetto due to
 GCC/CUDA version constraints. Install the precompiled wheel instead:
 
 ```bash
-pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.6.3/flash_attn-2.6.3+cu118torch2.3cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.6.3/flash_attn-2.6.3+cu118torch2.4cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
 ```
 
 ### 4. Pre-download all 5 models (do this on an interactive node with internet access)
@@ -76,9 +76,8 @@ J1=$(sbatch --parsable slurm/job_videollama3.sh)
 J2=$(sbatch --parsable slurm/job_internvl2_5.sh)
 J3=$(sbatch --parsable slurm/job_llava_onevision.sh)
 J4=$(sbatch --parsable slurm/job_qwen2_5_vl.sh)
-J5=$(sbatch --parsable slurm/job_minicpm_v.sh)
 
-echo "Submitted jobs: $J1 $J2 $J3 $J4 $J5"
+echo "Submitted jobs: $J1 $J2 $J3 $J4"
 ```
 
 Monitor progress:
@@ -92,7 +91,7 @@ tail -f logs/qwen2_5_vl_<jobid>.out
 ```bash
 # Replace your OpenAI API key in slurm/job_evaluate.sh first!
 # Then:
-sbatch --dependency=afterok:${J1}:${J2}:${J3}:${J4}:${J5} slurm/job_evaluate.sh
+sbatch --dependency=afterok:${J1}:${J2}:${J3}:${J4} slurm/job_evaluate.sh
 ```
 
 This runs `eval.py` (the official EgoBlind evaluator) for all 5 models, then
@@ -124,5 +123,5 @@ checks which `question_id`s are already in the output JSONL and skips them.
 - All models use **16 uniformly sampled frames** up to the question timestamp (`start-time/s`)
 - The prompt includes blind-user framing: *"You are assisting a blind person..."*
 - `eval.py` requires an OpenAI API key and takes ~18 minutes per model
-- InternVL2.5 and MiniCPM-V request 80G RAM due to higher memory overhead
+- InternVL2.5 requests 80G RAM due to higher memory overhead
 - Set `TRANSFORMERS_OFFLINE=1` in SLURM scripts after pre-downloading models

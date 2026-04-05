@@ -36,7 +36,6 @@ J1=$(sbatch --parsable slurm/job_videollama3.sh)
 J2=$(sbatch --parsable slurm/job_internvl2_5.sh)
 J3=$(sbatch --parsable slurm/job_llava_onevision.sh)
 J4=$(sbatch --parsable slurm/job_qwen2_5_vl.sh)
-J5=$(sbatch --parsable slurm/job_minicpm_v.sh)
 ```
 Or run a single model manually:
 ```bash
@@ -50,7 +49,7 @@ python scripts/01_run_inference.py \
 **Step 2 — Evaluation + analysis** (depends on all inference jobs):
 ```bash
 # Run eval.py (from EgoBlind repo) then analyze hallucination metrics
-sbatch --dependency=afterok:${J1}:${J2}:${J3}:${J4}:${J5} slurm/job_evaluate.sh
+sbatch --dependency=afterok:${J1}:${J2}:${J3}:${J4} slurm/job_evaluate.sh
 
 # Or run analysis directly after eval.py has been run:
 python scripts/02_analyze_hallucination.py \
@@ -83,7 +82,7 @@ pip install -r requirements.txt
 
 **flash-attn** — build-from-source fails on Palmetto (CUDA 11.8 / GCC version mismatch). Use the precompiled wheel:
 ```bash
-pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.6.3/flash_attn-2.6.3+cu118torch2.3cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.6.3/flash_attn-2.6.3+cu118torch2.4cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
 ```
 
 **Cache directories** (set before downloading models or running inference):
@@ -97,7 +96,7 @@ python scripts/preload.py
 ```
 Set `TRANSFORMERS_OFFLINE=1` in SLURM scripts after downloading.
 
-**Memory requirements**: InternVL2.5 and MiniCPM-V SLURM jobs request 80G RAM; others use less.
+**Memory requirements**: InternVL2.5 requests 80G RAM; others use less.
 
 ## Adding New Experiments
 

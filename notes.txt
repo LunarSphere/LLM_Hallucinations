@@ -1,0 +1,40 @@
+Context: Setting up a conda environment (egoblind_exp1) for a research project on Palmetto 2 (Clemson's HPC cluster), working from JupyterHub on nodeai03.
+ 
+What was tried and what worked:
+ 
+The original environment.yaml was slow because it mixed pytorch/nvidia/conda-forge channels causing a huge solver conflict. The base conda environment on Palmetto is also broken/locked — conda install hangs indefinitely, so conda-libmamba-solver could not be installed.
+ 
+Working solution: Created a minimal conda env with just python + pip, then installed everything else via pip:
+ 
+    conda create -n egoblind_exp1 python=3.10 pip -y
+    conda activate egoblind_exp1
+    pip install --extra-index-url https://download.pytorch.org/whl/cu118 \
+        torch==2.3.0+cu118 \
+        torchvision==0.18.0+cu118 \
+        transformers==4.46.0 \
+        accelerate decord Pillow numpy pandas openai \
+        tenacity einops timm sentencepiece tabulate
+ 
+Still unresolved — flash-attn installation is failing through multiple approaches:
+- Building from source fails because CUDA 11.8 only supports GCC <=11, but the system default is too old and GCC 12 is too new
+- CUDA_HOME is not set by default in JupyterHub, blocking nvcc from being found
+- The precompiled wheel at v2.6.3+cu118torch2.3cxx11abiFALSE-cp310-cp310-linux_x86_64 hasn't been tried yet and is the recommended next step
+ 
+Next step to try:
+    pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.6.3/flash_attn-2.6.3+cu118torch2.3cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+ 
+The goal is to update the repo's environment.yaml and setup instructions to reflect all of this.
+
+Fix the `preload.py` and `environment.yaml` in `experiment_1/` for the EgoBlind project:
+ 
+1. `environment.yaml` — change `transformers==4.46.0` to `transformers>=4.47.0`
+ 
+2. `preload.py` — replace the current script with one that uses the correct loader class per model instead of `AutoModelForVision2Seq` for all models:
+   - VideoLLaMA3 → AutoModel + AutoProcessor + trust_remote_code=True
+   - InternVL2_5-8B → AutoModel + AutoTokenizer + trust_remote_code=True
+   - llava-onevision → LlavaOnevisionForConditionalGeneration + AutoProcessor
+   - Qwen2.5-VL → Qwen2_5_VLForConditionalGeneration + AutoProcessor
+   - MiniCPM-V-2_6 → AutoModel + AutoTokenizer + trust_remote_code=True
+ 
+   Each model should be downloaded in a try/except block so a failure on one doesn't stop the rest. Print a success/failure summary at the end.
+ 
