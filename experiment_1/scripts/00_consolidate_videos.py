@@ -73,7 +73,7 @@ def main(args):
         df = pd.read_csv(args.csv)
         # video_name column is an integer like 923; format as 5-digit zero-padded
         csv_names = set(f"{int(v):05d}.mp4" for v in df["video_name"].unique())
-        flat_names = set(p.name for p in dst.glob("*.mp4")) if not args.dry_run else set(seen.keys())
+        flat_names = set(p.name for p in dst.glob("*.mp4"))
         missing = csv_names - flat_names
         if missing:
             print(f"\nWARNING: {len(missing)} videos in CSV not found in flat dir:")

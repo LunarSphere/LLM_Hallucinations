@@ -70,7 +70,7 @@ python scripts/00_consolidate_videos.py --dry_run
 ### Step 2 — Submit all 5 inference jobs (can run in parallel)
 
 ```bash
-cd /jjtribb/LLM_Hallucinations/experiment_1
+cd /LLM_Hallucinations/experiment_1
 
 J1=$(sbatch --parsable slurm/job_videollama3.sh)
 J2=$(sbatch --parsable slurm/job_internvl2_5.sh)

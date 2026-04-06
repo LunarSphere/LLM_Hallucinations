@@ -1,23 +1,22 @@
 #!/bin/bash
-#SBATCH --job-name=egoblind_internvl
-#SBATCH --partition=gpu-a100
-#SBATCH --nodes=1
+#SBATCH --job-name=egoblind_videollama3
+#SBATCH --nodes 1 
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=80G
-#SBATCH --gres=gpu:a100:1
-#SBATCH --time=12:00:00
-#SBATCH --output=logs/internvl2_5_%j.out
-#SBATCH --error=logs/internvl2_5_%j.err
+#SBATCH --mem-per-cpu 8gb
+#SBATCH --gpus-per-task h100:1
+#SBATCH --time 12:00:00   
+#SBATCH --output=logs/videollama3_%j.out
+#SBATCH --error=logs/videollama3_%j.err
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=jjtribb@clemson.edu
 
 module load anaconda3/2023.09
-source activate egoblind_exp1
+conda activate exp1
 
-source /jjtribb/LLM_Hallucinations/experiment_1/scripts/set_cache_dirs.sh
+source /home/jjtribb/LLM_Hallucinations/experiment_1/scripts/set_cache_dirs.sh
 
-cd /jjtribb/LLM_Hallucinations/experiment_1
+cd /home/jjtribb/LLM_Hallucinations/experiment_1
 
 mkdir -p logs outputs/predictions
 

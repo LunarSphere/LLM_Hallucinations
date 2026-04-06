@@ -156,7 +156,8 @@ def load_llava_onevision(model_id: str):
     from transformers import LlavaOnevisionForConditionalGeneration, AutoProcessor
     processor = AutoProcessor.from_pretrained(model_id)
     model = LlavaOnevisionForConditionalGeneration.from_pretrained(
-        model_id, torch_dtype=torch.bfloat16, device_map="auto"
+        model_id, torch_dtype=torch.bfloat16, device_map="auto",
+        ignore_mismatched_sizes=True,
     )
     model.eval()
     return model, processor

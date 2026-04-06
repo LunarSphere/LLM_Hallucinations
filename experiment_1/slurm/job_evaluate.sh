@@ -15,12 +15,12 @@
 #   sbatch --dependency=afterok:<j1>:<j2>:<j3>:<j4>:<j5> slurm/job_evaluate.sh
 
 module load anaconda3/2023.09
-source activate egoblind_exp1
+conda activate exp1
 
-source /jjtribb/LLM_Hallucinations/experiment_1/scripts/set_cache_dirs.sh
+source /home/jjtribb/LLM_Hallucinations/experiment_1/scripts/set_cache_dirs.sh
 export OPENAI_API_KEY="<your_openai_api_key_here>"
 
-cd /jjtribb/LLM_Hallucinations/experiment_1
+cd /home/jjtribb/LLM_Hallucinations/experiment_1
 
 mkdir -p outputs/evaluations
 
