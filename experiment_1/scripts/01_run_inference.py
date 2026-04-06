@@ -73,9 +73,9 @@ def extract_frames(video_path: str, end_time: float, num_frames: int = 16) -> li
 # ─── Model loaders and inference ─────────────────────────────────────────────
 
 def load_videollama3(model_id: str):
-    from transformers import AutoProcessor, AutoModel
+    from transformers import AutoProcessor, AutoModelForCausalLM
     processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
-    model = AutoModel.from_pretrained(
+    model = AutoModelForCausalLM.from_pretrained(
         model_id, torch_dtype=torch.bfloat16, device_map="auto", trust_remote_code=True
     )
     model.eval()
