@@ -12,7 +12,7 @@
 #SBATCH --mail-user=jjtribb@clemson.edu
 
 module load anaconda3/2023.09
-conda activate exp1
+source activate exp1
 
 source /home/jjtribb/LLM_Hallucinations/experiment_1/scripts/set_cache_dirs.sh
 
