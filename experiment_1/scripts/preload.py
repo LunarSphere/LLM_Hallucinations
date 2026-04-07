@@ -18,7 +18,7 @@ from huggingface_hub import snapshot_download
 MODELS = [
     {"name": "VideoLLaMA3",      "model_id": "DAMO-NLP-SG/VideoLLaMA3-7B"},
     {"name": "InternVL2_5-8B",   "model_id": "OpenGVLab/InternVL2_5-8B"},
-    {"name": "LLaVA-OneVision",  "model_id": "lmms-lab/llava-onevision-qwen2-7b-ov"},
+    {"name": "LLaVA-OneVision",  "model_id": "llava-hf/llava-onevision-qwen2-7b-ov-hf"},
     {"name": "Qwen2.5-VL",       "model_id": "Qwen/Qwen2.5-VL-7B-Instruct"},
 ]
 
