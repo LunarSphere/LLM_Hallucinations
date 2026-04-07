@@ -42,27 +42,6 @@ PROMPT_TEMPLATE = (
     "Question: {question}"
 )
 
-# Chat template for lmms-lab/llava-onevision-qwen2-7b-ov.  The model upload has
-# no chat_template in tokenizer_config.json; passing it explicitly to
-# apply_chat_template is more reliable than setting it on the processor object.
-_LLAVA_OV_CHAT_TEMPLATE = (
-    "{% for message in messages %}"
-    "{% if loop.first and messages[0]['role'] != 'system' %}"
-    "{{ '<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n' }}"
-    "{% endif %}"
-    "{{'<|im_start|>' + message['role'] + '\n'}}"
-    "{% if message['content'] is string %}{{ message['content'] }}"
-    "{% else %}"
-    "{% for content in message['content'] %}"
-    "{% if content['type'] == 'image' %}{{ '<image>\n' }}"
-    "{% elif content['type'] == 'text' %}{{ content['text'] }}"
-    "{% endif %}{% endfor %}"
-    "{% endif %}"
-    "{{ '<|im_end|>\n' }}"
-    "{% endfor %}"
-    "{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}"
-)
-
 
 # ─── Video utilities ──────────────────────────────────────────────────────────
 
@@ -197,70 +176,28 @@ def infer_internvl2_5(model, tokenizer, frames: list, question: str, **kwargs) -
 
 
 def load_llava_onevision(model_id: str):
-    import json
-    from huggingface_hub import hf_hub_download
     from transformers import LlavaOnevisionForConditionalGeneration, AutoProcessor
-    # lmms-lab/llava-onevision-qwen2-7b-ov ships with model_type=llava in its
-    # config.json, which causes transformers to mis-parse the entire nested
-    # config (wrong text hidden_size, wrong vision num_heads, etc.).  Patch the
-    # cached file once so every subsequent load sees the correct model_type.
-    # Patch model_type in the cached config.json so transformers parses the
-    # full nested config (text + vision) correctly.
-    config_path = hf_hub_download(model_id, "config.json")
-    with open(config_path) as f:
-        cfg = json.load(f)
-    if cfg.get("model_type") == "llava":
-        cfg["model_type"] = "llava_onevision"
-        with open(config_path, "w") as f:
-            json.dump(cfg, f, indent=2)
-    from transformers import LlavaOnevisionConfig, Qwen2Config
-    config = LlavaOnevisionConfig.from_pretrained(model_id)
-    # vision_config.num_attention_heads must divide embed_dim=1152 evenly.
-    # The HF upload has 14 (wrong); SiGLIP-SO400M needs 16.
-    config.vision_config.num_attention_heads = 16
-    # The original config.json has no text_config section, so LlavaOnevisionConfig
-    # defaults to hidden_size=4096 (LLaMA).  This model uses Qwen2-7B (3584).
-    # Explicitly set the correct text config so image_newline and all LM weight
-    # shapes match the checkpoint.
-    config.text_config = Qwen2Config(
-        hidden_size=3584,
-        intermediate_size=18944,
-        num_hidden_layers=28,
-        num_attention_heads=28,
-        num_key_value_heads=4,
-        vocab_size=152064,
-        max_position_embeddings=32768,
-        rms_norm_eps=1e-6,
-    )
-    processor = AutoProcessor.from_pretrained(model_id, use_fast=True)
-    # The lmms-lab upload has no chat_template in the tokenizer config.
-    # Inject a Qwen2-style template that handles multimodal content lists.
-    if not getattr(processor.tokenizer, "chat_template", None):
-        processor.tokenizer.chat_template = (
-            "{% for message in messages %}"
-            "{% if loop.first and messages[0]['role'] != 'system' %}"
-            "{{ '<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n' }}"
-            "{% endif %}"
-            "{{'<|im_start|>' + message['role'] + '\n'}}"
-            "{% if message['content'] is string %}{{ message['content'] }}"
-            "{% else %}"
-            "{% for content in message['content'] %}"
-            "{% if content['type'] == 'image' %}{{ '<image>\n' }}"
-            "{% elif content['type'] == 'text' %}{{ content['text'] }}"
-            "{% endif %}{% endfor %}"
-            "{% endif %}"
-            "{{ '<|im_end|>\n' }}"
-            "{% endfor %}"
-            "{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}"
-        )
+    # llava-hf/llava-onevision-qwen2-7b-ov-hf is the official HF-maintained mirror
+    # of the lmms-lab checkpoint.  It ships with correct patch_size, chat_template,
+    # and all vision/text config values — no manual patching needed.
+    processor = AutoProcessor.from_pretrained(model_id)
     model = LlavaOnevisionForConditionalGeneration.from_pretrained(
-        model_id, config=config, torch_dtype=torch.bfloat16, device_map="auto",
+        model_id, torch_dtype=torch.bfloat16, device_map="auto"
     )
     model.eval()
     return model, processor
 
 
 def infer_llava_onevision(model, processor, frames: list, question: str, **kwargs) -> str:
+    # Cap resolution: anyres-9 splits each frame into up to 9 patches, so
+    # high-res frames multiply memory by 9×.  336×336 keeps it tractable.
+    MAX_SIDE = 336
+    frames = [f.copy() for f in frames]
+    for f in frames:
+        f.thumbnail((MAX_SIDE, MAX_SIDE))
+    # Subsample to 8 frames to halve visual token count (same as VideoLLaMA3).
+    frames = frames[::2] if len(frames) > 8 else frames
+
     prompt = PROMPT_TEMPLATE.format(question=question)
     image_content = [{"type": "image"} for _ in frames]
     conversation = [
@@ -269,17 +206,15 @@ def infer_llava_onevision(model, processor, frames: list, question: str, **kwarg
             "content": image_content + [{"type": "text", "text": prompt}],
         }
     ]
-    # Pass template explicitly — more reliable than relying on processor.chat_template
-    # or processor.tokenizer.chat_template, which are unset in the lmms-lab upload.
     text = processor.apply_chat_template(
-        conversation,
-        chat_template=_LLAVA_OV_CHAT_TEMPLATE,
-        tokenize=False,
-        add_generation_prompt=True,
+        conversation, tokenize=False, add_generation_prompt=True
     )
-    inputs = processor(text=text, images=frames, return_tensors="pt").to(model.device)
+    # Nested list tells the processor to treat all frames as one multi-image
+    # input rather than patchifying each independently (saves memory).
+    inputs = processor(text=text, images=[frames], return_tensors="pt").to(model.device)
     with torch.no_grad():
         output_ids = model.generate(**inputs, max_new_tokens=128, do_sample=False)
+    # Standard HF generate returns [input + generated]; slice off the prompt.
     generated = output_ids[:, inputs["input_ids"].shape[1]:]
     return processor.decode(generated[0], skip_special_tokens=True).strip()
 
@@ -339,7 +274,7 @@ MODEL_REGISTRY = {
         "infer_fn": infer_internvl2_5,
     },
     "llava_onevision": {
-        "model_id": "lmms-lab/llava-onevision-qwen2-7b-ov",
+        "model_id": "llava-hf/llava-onevision-qwen2-7b-ov-hf",
         "load_fn": load_llava_onevision,
         "infer_fn": infer_llava_onevision,
     },

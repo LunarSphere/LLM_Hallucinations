@@ -38,3 +38,6 @@ Fix the `preload.py` and `environment.yaml` in `experiment_1/` for the EgoBlind 
  
    Each model should be downloaded in a try/except block so a failure on one doesn't stop the rest. Print a success/failure summary at the end.
  
+
+
+Some of our videos are corrupt
