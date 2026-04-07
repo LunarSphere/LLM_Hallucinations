@@ -103,28 +103,23 @@ def load_videollama3(model_id: str):
     return model, processor
 
 
-def infer_videollama3(model, processor, frames: list, question: str,
-                      video_path: str = None, end_time: float = None,
-                      num_frames: int = 16, **kwargs) -> str:
+def infer_videollama3(model, processor, frames: list, question: str, **kwargs) -> str:
     prompt = PROMPT_TEMPLATE.format(question=question)
-    # VideoLLaMA3's Jinja chat template resolves num_frames from the video spec,
-    # so video data and template must travel together via processor(conversation=...).
-    # Use the official video_path API; compute fps to match our uniform sampling.
-    valid_end = end_time and not np.isnan(float(end_time)) and end_time > 0
-    duration = float(end_time) if valid_end else None
-    fps = (num_frames / duration) if duration else 1.0
-    video_spec = {"video_path": video_path, "fps": fps, "max_frames": num_frames}
+    # When images= is provided, _load_multimodal_data (and therefore load_video /
+    # ffprobe) is skipped entirely.  We still need num_frames in the conversation
+    # so the Jinja template can do range(content.num_frames) without Undefined.
     conversation = [
         {"role": "system", "content": "You are a helpful assistant."},
         {
             "role": "user",
             "content": [
-                {"type": "video", "video": video_spec},
+                {"type": "video", "num_frames": len(frames)},
                 {"type": "text", "text": prompt},
             ],
         },
     ]
-    inputs = processor(conversation=conversation, return_tensors="pt")
+    # images expects BatchedImage: a list of videos, each video a list of PIL frames
+    inputs = processor(conversation=conversation, images=[frames], return_tensors="pt")
     inputs = {k: v.to(model.device) if isinstance(v, torch.Tensor) else v for k, v in inputs.items()}
     if "pixel_values" in inputs:
         inputs["pixel_values"] = inputs["pixel_values"].to(torch.bfloat16)
@@ -394,10 +389,8 @@ def main(args):
                 end_time = getattr(row, "start-time/s", None)
                 frames = extract_frames(str(video_path), end_time, num_frames=args.num_frames)
 
-                # Run inference (video_path/end_time/num_frames used by VideoLLaMA3)
-                pred = infer_fn(model, processor, frames, row.question,
-                                video_path=str(video_path), end_time=end_time,
-                                num_frames=args.num_frames)
+                # Run inference
+                pred = infer_fn(model, processor, frames, row.question)
 
                 out_f.write(json.dumps({"question_id": row.question_id, "pred": pred}) + "\n")
                 out_f.flush()
