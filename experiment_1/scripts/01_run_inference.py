@@ -169,11 +169,25 @@ def load_llava_onevision(model_id: str):
         cfg["model_type"] = "llava_onevision"
         with open(config_path, "w") as f:
             json.dump(cfg, f, indent=2)
-    from transformers import LlavaOnevisionConfig
+    from transformers import LlavaOnevisionConfig, Qwen2Config
     config = LlavaOnevisionConfig.from_pretrained(model_id)
     # vision_config.num_attention_heads must divide embed_dim=1152 evenly.
     # The HF upload has 14 (wrong); SiGLIP-SO400M needs 16.
     config.vision_config.num_attention_heads = 16
+    # The original config.json has no text_config section, so LlavaOnevisionConfig
+    # defaults to hidden_size=4096 (LLaMA).  This model uses Qwen2-7B (3584).
+    # Explicitly set the correct text config so image_newline and all LM weight
+    # shapes match the checkpoint.
+    config.text_config = Qwen2Config(
+        hidden_size=3584,
+        intermediate_size=18944,
+        num_hidden_layers=28,
+        num_attention_heads=28,
+        num_key_value_heads=4,
+        vocab_size=152064,
+        max_position_embeddings=32768,
+        rms_norm_eps=1e-6,
+    )
     processor = AutoProcessor.from_pretrained(model_id, use_fast=True)
     model = LlavaOnevisionForConditionalGeneration.from_pretrained(
         model_id, config=config, torch_dtype=torch.bfloat16, device_map="auto",
