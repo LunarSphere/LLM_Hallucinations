@@ -153,11 +153,14 @@ def infer_internvl2_5(model, tokenizer, frames: list, question: str) -> str:
 
 
 def load_llava_onevision(model_id: str):
-    from transformers import LlavaOnevisionForConditionalGeneration, AutoProcessor
-    processor = AutoProcessor.from_pretrained(model_id)
+    from transformers import LlavaOnevisionForConditionalGeneration, AutoProcessor, LlavaOnevisionConfig
+    processor = AutoProcessor.from_pretrained(model_id, use_fast=True)
+    # lmms-lab model config.json has model_type=llava; explicitly load as
+    # LlavaOnevisionConfig so the vision tower gets the correct architecture
+    # (SiGLIP with 16 heads) instead of the mismatched LlavaConfig shape.
+    config = LlavaOnevisionConfig.from_pretrained(model_id)
     model = LlavaOnevisionForConditionalGeneration.from_pretrained(
-        model_id, torch_dtype=torch.bfloat16, device_map="auto",
-        ignore_mismatched_sizes=True,
+        model_id, config=config, torch_dtype=torch.bfloat16, device_map="auto",
     )
     model.eval()
     return model, processor
