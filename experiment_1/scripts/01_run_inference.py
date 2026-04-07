@@ -163,8 +163,16 @@ def load_llava_onevision(model_id: str):
     config_path = hf_hub_download(model_id, "config.json")
     with open(config_path) as f:
         cfg = json.load(f)
+    dirty = False
     if cfg.get("model_type") == "llava":
         cfg["model_type"] = "llava_onevision"
+        dirty = True
+    # SiGLIP-SO400M needs 16 heads for embed_dim=1152; HF upload has 14
+    vc = cfg.get("vision_config", {})
+    if vc.get("num_attention_heads") == 14:
+        cfg["vision_config"]["num_attention_heads"] = 16
+        dirty = True
+    if dirty:
         with open(config_path, "w") as f:
             json.dump(cfg, f, indent=2)
     processor = AutoProcessor.from_pretrained(model_id, use_fast=True)
