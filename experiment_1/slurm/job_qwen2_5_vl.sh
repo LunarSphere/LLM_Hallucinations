@@ -2,7 +2,7 @@
 #SBATCH --job-name=egoblind_qwen2_5
 #SBATCH --nodes 1 
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=10
 #SBATCH --mem-per-cpu 8gb
 #SBATCH --gpus-per-task h100:1
 #SBATCH --time 12:00:00   
