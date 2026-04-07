@@ -1,103 +1,210 @@
-python scripts/preload.py 
-Disabling PyTorch because PyTorch >= 2.4 is required but found 2.3.0+cu118
-PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
-PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+LLava_onevision outputs
+========================
+{"question_id": "v_00923_1", "pred": "I don't know", "error": "ERROR: ValueError: No chat template is set for this processor. Please either set the `chat_template` attribute, or provide a chat template as an argument. See https://huggingface.co/docs/transformers/main/en/chat_templating for more information."}
+{"question_id": "v_00923_2", "pred": "I don't know", "error": "ERROR: ValueError: No chat template is set for this processor. Please either set the `chat_template` attribute, or provide a chat template as an argument. See https://huggingface.co/docs/transformers/main/en/chat_templating for more information."}
+{"question_id": "v_00923_4", "pred": "I don't know", "error": "ERROR: ValueError: No chat template is set for this processor. Please either set the `chat_template` attribute, or provide a chat template as an argument. See https://huggingface.co/docs/transformers/main/en/chat_templating for more information."}
+{"question_id": "v_00923_5", "pred": "I don't know", "error": "ERROR: ValueError: No chat template is set for this processor. Please either set the `chat_template` attribute, or provide a chat template as an argument. See https://huggingface.co/docs/transformers/main/en/chat_templating for more information."}
+...
 
-[VideoLLaMA3] Downloading processor from DAMO-NLP-SG/VideoLLaMA3-7B ...
-Encountered exception while importing cv2: No module named 'cv2'
-Encountered exception while importing ffmpeg: No module named 'ffmpeg'
-Encountered exception while importing imageio: No module named 'imageio'
-Encountered exception while importing requests: No module named 'requests'
-^C[VideoLLaMA3] ERROR: This modeling file requires the following packages that were not found in your environment: cv2, ffmpeg, imageio, requests. Run `pip install cv2 ffmpeg imageio requests`
+LLava_onevision errors
+========================
 
-[InternVL2_5-8B] Downloading processor from OpenGVLab/InternVL2_5-8B ...
-^C^CCould not extract SentencePiece model from /home/jjtribb/.cache/huggingface/hub/models--OpenGVLab--InternVL2_5-8B/snapshots/e9e4c0dc1db56bfab10458671519b7fa3dd29463/tokenizer.model using sentencepiece library due to 
-SentencePieceExtractor requires the protobuf library but it was not found in your environment. Check out the instructions on the
-installation page of its repo: https://github.com/protocolbuffers/protobuf/tree/master/python#installation and follow the ones
-that match your environment. Please note that you may need to restart your runtime after installation.
-. Falling back to TikToken extractor.
-[InternVL2_5-8B] ERROR: `tiktoken` is required to read a `tiktoken` file. Install it with `pip install tiktoken`.
+Sliding Window Attention is enabled but not implemented for `sdpa`; unexpected results may be encountered.
 
-[LLaVA-OneVision] Downloading processor from lmms-lab/llava-onevision-qwen2-7b-ov ...
-^C^C^C[LLaVA-OneVision] Processor done. Downloading model weights ...
-[LLaVA-OneVision] ERROR: 
-LlavaOnevisionForConditionalGeneration requires the PyTorch library but it was not found in your environment. Check out the instructions on the
-installation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.
-Please note that you may need to restart your runtime after installation.
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]
+Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:02,  1.43it/s]
+Loading checkpoint shards:  50%|█████     | 2/4 [00:00<00:00,  2.18it/s]
+Loading checkpoint shards:  75%|███████▌  | 3/4 [00:01<00:00,  1.96it/s]
+Loading checkpoint shards: 100%|██████████| 4/4 [00:01<00:00,  2.68it/s]
+Loading checkpoint shards: 100%|██████████| 4/4 [00:01<00:00,  2.32it/s]
+Some weights of LlavaOnevisionForConditionalGeneration were not initialized from the model checkpoint at lmms-lab/llava-onevision-qwen2-7b-ov and are newly initialized: ['model.language_model.lm_head.weight', 'model.language_model.model.embed_tokens.weight', 'model.language_model.model.layers.0.input_layernorm.weight', 'model.language_model.model.layers.0.mlp.down_proj.weight', 'model.language_model.model.layers.0.mlp.gate_proj.weight', 'model.language_model.model.layers.0.mlp.up_proj.weight', 'model.language_model.model.layers.0.post_attention_layernorm.weight', 'model.language_model.model.layers.0.self_attn.k_proj.bias', 'model.language_model.model.layers.0.self_attn.k_proj.weight', 
 
+LLava_onevision out_terminal
+=========================
 
-[Qwen2.5-VL] Downloading processor from Qwen/Qwen2.5-VL-7B-Instruct ...
-config.json: 1.37kB [00:00, 6.42MB/s]
-tokenizer_config.json: 5.70kB [00:00, 31.1MB/s]
-vocab.json: 2.78MB [00:00, 11.6MB/s]
-merges.txt: 1.67MB [00:00, 12.4MB/s]
-tokenizer.json: 7.03MB [00:00, 18.4MB/s]
-[Qwen2.5-VL] ERROR: 
-Qwen2VLVideoProcessor requires the PyTorch library but it was not found in your environment. Check out the instructions on the
-installation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.
-Please note that you may need to restart your runtime after installation.
-
-Qwen2VLVideoProcessor requires the Torchvision library but it was not found in your environment. Check out the instructions on the
-installation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.
-Please note that you may need to restart your runtime after installation.
+[cache] All caches routed to /scratch/jjtribb
+Loaded 1283 questions from data/test_half_release.csv
+Questions to process: 1283
+Loading model: lmms-lab/llava-onevision-qwen2-7b-ov
 
 
-[MiniCPM-V-2_6] Downloading processor from openbmb/MiniCPM-V-2_6 ...
-[MiniCPM-V-2_6] ERROR: You are trying to access a gated repo.
-Make sure to have access to it at https://huggingface.co/openbmb/MiniCPM-V-2_6.
-403 Client Error. (Request ID: Root=1-69d2ead2-6bf2b7622fce89b62deadace;17bfeb83-fc88-4bf4-9912-fbf028287e64)
+Internvl2_5 outputs
+========================
+{"question_id": "v_01045_4", "pred": "To find the entrance to the shop, you should look for the large wooden door with the numbers \"2345\" written on it. The shop appears to be on the right side of the walkway, and the door is located at the end of the covered walkway."}
+{"question_id": "v_01045_5", "pred": "Yes, you are facing towards the exit of the walkway."}
+{"question_id": "v_01046_2", "pred": "Yes, it is safe to enter this area."}
+{"question_id": "v_01046_3", "pred": "The entrance to the main hall is located to the right of the person wearing a pink jacket."}
+{"question_id": "v_01046_4", "pred": "To get to the nearest restroom from here, you need to go straight ahead."}
+{"question_id": "v_01047_1", "pred": "I don't know."}
+{"question_id": "v_01048_3", "pred": "I don't know."}
+{"question_id": "v_01048_4", "pred": "I don't know."}
+{"question_id": "v_01049_1", "pred": "I don't know."}
+{"question_id": "v_01050_2", "pred": "To continue down this street, you should take the path that leads straight ahead."}
+{"question_id": "v_01051_1", "pred": "I don't know", "error": "ERROR: DECORDError: [23:02:40] /github/workspace/src/video/ffmpeg/threaded_decoder.cc:292: [23:02:40] /github/workspace/src/video/ffmpeg/threaded_decoder.cc:218: Check failed: avcodec_send_packet(dec_ctx_.get(), pkt.get()) >= 0 (-1094995529 vs. 0) Thread worker: Error sending packet."}
 
-Cannot access gated repo for url https://huggingface.co/openbmb/MiniCPM-V-2_6/resolve/main/config.json.
-Access to model openbmb/MiniCPM-V-2_6 is restricted and you are not in the authorized list. Visit https://huggingface.co/openbmb/MiniCPM-V-2_6 to ask for access.
 
-==================================================
-Download summary:
-  ✗ VideoLLaMA3: FAILED — ImportError: This modeling file requires the following packages that were not found in your environment: cv2, ffmpeg, imageio, requests. Run `pip install cv2 ffmpeg imageio requests`
-  ✗ InternVL2_5-8B: FAILED — ValueError: `tiktoken` is required to read a `tiktoken` file. Install it with `pip install tiktoken`.
-  ✗ LLaVA-OneVision: FAILED — ImportError: 
-LlavaOnevisionForConditionalGeneration requires the PyTorch library but it was not found in your environment. Check out the instructions on the
-installation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.
-Please note that you may need to restart your runtime after installation.
+Internvl2_5 errors
+========================
 
-  ✗ Qwen2.5-VL: FAILED — ImportError: 
-Qwen2VLVideoProcessor requires the PyTorch library but it was not found in your environment. Check out the instructions on the
-installation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.
-Please note that you may need to restart your runtime after installation.
+/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/timm/models/layers/__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+InternLM2ForCausalLM has generative capabilities, as `prepare_inputs_for_generation` is explicitly overwritten. However, it doesn't directly inherit from `GenerationMixin`. From 👉v4.50👈 onwards, `PreTrainedModel` will NOT inherit from `GenerationMixin`, and this model will lose the ability to call `generate` and other related functions.
+  - If you're using `trust_remote_code=True`, you can get rid of this warning by loading the model with an auto class. See https://huggingface.co/docs/transformers/en/model_doc/auto#auto-classes
+  - If you are the owner of the model architecture code, please modify your model class such that it inherits from `GenerationMixin` (after `PreTrainedModel`, otherwise you'll get an exception).
+  - If you are not the owner of the model architecture class, please contact the model code owner to update it.
 
-Qwen2VLVideoProcessor requires the Torchvision library but it was not found in your environment. Check out the instructions on the
-installation page: https://pytorch.org/get-started/locally/ and follow the ones that match your environment.
-Please note that you may need to restart your runtime after installation.
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]
+Loading checkpoint shards:  25%|██▌       | 1/4 [00:04<00:13,  4.59s/it]
+Loading checkpoint shards:  50%|█████     | 2/4 [00:09<00:09,  4.68s/it]
+Loading checkpoint shards:  75%|███████▌  | 3/4 [00:15<00:05,  5.45s/it]
+Loading checkpoint shards: 100%|██████████| 4/4 [00:17<00:00,  3.83s/it]
+Loading checkpoint shards: 100%|██████████| 4/4 [00:17<00:00,  4.26s/it]
+[h264 @ 0x55bcf2df5040] Invalid NAL unit size (0 > 58166).
+[h264 @ 0x55bcf2df5040] Error splitting the input into NAL units.
+[h264 @ 0x55bcd6e60ec0] Invalid NAL unit size (0 > 32004).
+[h264 @ 0x55bcd6e60ec0] Error splitting the input into NAL units.
+[h264 @ 0x55bce9f05c40] Invalid NAL unit size (0 > 61687).
 
-  ✗ MiniCPM-V-2_6: FAILED — OSError: You are trying to access a gated repo.
-Make sure to have access to it at https://huggingface.co/openbmb/MiniCPM-V-2_6.
-403 Client Error. (Request ID: Root=1-69d2ead2-6bf2b7622fce89b62deadace;17bfeb83-fc88-4bf4-9912-fbf028287e64)
 
-Cannot access gated repo for url https://huggingface.co/openbmb/MiniCPM-V-2_6/resolve/main/config.json.
-Access to model openbmb/MiniCPM-V-2_6 is restricted and you are not in the authorized list. Visit https://huggingface.co/openbmb/MiniCPM-V-2_6 to ask for access.
+Internvl2_5 out_terminal
+=========================
+[cache] All caches routed to /scratch/jjtribb
+Loaded 1283 questions from data/test_half_release.csv
+Questions to process: 1283
+Loading model: OpenGVLab/InternVL2_5-8B
+Model loaded.
+[50/1283] Processed 50 questions (0 errors so far)
+[100/1283] Processed 100 questions (0 errors so far)
+[150/1283] Processed 150 questions (0 errors so far)
+[200/1283] Processed 200 questions (0 errors so far)
+[250/1283] Processed 250 questions (0 errors so far)
+[274/1283] ERROR on v_01051_1: ERROR: DECORDError: [23:02:40] /github/workspace/src/video/ffmpeg/threaded_decoder.cc:292: [23:02:40] /github/workspace/src/video/ffmpeg/threaded_decoder.cc:218: Check failed: avcodec_send_packet(dec_ctx_.get(), pkt.get()) >= 0 (-1094995529 vs. 0) Thread worker: Error sending packet.
+[300/1283] Processed 300 questions (1 errors so far)
+[350/1283] Processed 350 questions (1 errors so far)
+[400/1283] Processed 400 questions (1 errors so far)
+[450/1283] Processed 450 questions (1 errors so far)
 
-5 model(s) failed. Re-run to retry, or check the error above.
-(exp1) [jjtribb@nodeai01 experiment_1]$ pip uninstall torch torchvision torchaudio
-Found existing installation: torch 2.3.0+cu118
-Uninstalling torch-2.3.0+cu118:
-  Would remove:
-    /home/jjtribb/.conda/envs/exp1/bin/convert-caffe2-to-onnx
-    /home/jjtribb/.conda/envs/exp1/bin/convert-onnx-to-caffe2
-    /home/jjtribb/.conda/envs/exp1/bin/torchrun
-    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/functorch/*
-    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torch-2.3.0+cu118.dist-info/*
-    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torch/*
-    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torchgen/*
-Proceed (Y/n)? y
-  Successfully uninstalled torch-2.3.0+cu118
-Found existing installation: torchvision 0.18.0+cu118
-Uninstalling torchvision-0.18.0+cu118:
-  Would remove:
-    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torchvision-0.18.0+cu118.dist-info/*
-    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torchvision.libs/libcudart.60cfec8e.so.11.0
-    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torchvision.libs/libjpeg.ceea7512.so.62
-    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torchvision.libs/libnvjpeg.70530407.so.11
-    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torchvision.libs/libpng16.7f72a3c5.so.16
-    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torchvision.libs/libz.4100288c.so.1
-    /home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torchvision/*
-Proceed (Y/n)? y
-  Successfully uninstalled torchvision-0.18.0+cu118
+
+qwen_2_5 outputs
+========================
+{"question_id": "v_00923_1", "pred": "I don't know", "error": "ERROR: OutOfMemoryError: CUDA out of memory. Tried to allocate 883.97 GiB. GPU 0 has a total capacity of 139.72 GiB of which 34.57 GiB is free. Including non-PyTorch memory, this process has 105.14 GiB memory in use. Of the allocated memory 103.70 GiB is allocated by PyTorch, and 609.28 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)"}
+....
+
+qwen_2_5 errors
+========================
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.48, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]
+Loading checkpoint shards:  20%|██        | 1/5 [00:04<00:18,  4.61s/it]
+Loading checkpoint shards:  40%|████      | 2/5 [00:10<00:15,  5.14s/it]
+Loading checkpoint shards:  60%|██████    | 3/5 [00:14<00:09,  4.83s/it]
+Loading checkpoint shards:  80%|████████  | 4/5 [00:26<00:07,  7.43s/it]
+Loading checkpoint shards: 100%|██████████| 5/5 [00:28<00:00,  5.72s/it]
+Loading checkpoint shards: 100%|██████████| 5/5 [00:28<00:00,  5.74s/it]
+/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/transformers/generation/configuration_utils.py:629: UserWarning: `do_sample` is set to `False`. However, `temperature` is set to `1e-06` -- this flag is only used in sample-based generation modes. You should set `do_sample=True` or unset `temperature`.
+  warnings.warn(
+Traceback (most recent call last):
+  File "/home/jjtribb/LLM_Hallucinations/experiment_1/scripts/01_run_inference.py", line 306, in main
+    pred = infer_fn(model, processor, frames, row.question)
+  File "/home/jjtribb/LLM_Hallucinations/experiment_1/scripts/01_run_inference.py", line 218, in infer_qwen2_5_vl
+    output_ids = model.generate(**inputs, max_new_tokens=128, do_sample=False)
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+    return func(*args, **kwargs)
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/transformers/generation/utils.py", line 2223, in generate
+    result = self._sample(
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/transformers/generation/utils.py", line 3211, in _sample
+    outputs = self(**model_inputs, return_dict=True)
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1553, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1562, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 1795, in forward
+    image_embeds = self.visual(pixel_values, grid_thw=image_grid_thw)
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1553, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1562, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 558, in forward
+    hidden_states = blk(hidden_states, cu_seqlens=cu_seqlens_now, position_embeddings=position_embeddings)
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1553, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1562, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 351, in forward
+    hidden_states = hidden_states + self.attn(
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1553, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1562, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/transformers/models/qwen2_5_vl/modeling_qwen2_5_vl.py", line 320, in forward
+    attn_output = F.scaled_dot_product_attention(q, k, v, attention_mask, dropout_p=0.0)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 883.97 GiB. GPU 0 has a total capacity of 139.72 GiB of which 34.57 GiB is free. Including non-PyTorch memory, this process has 105.14 GiB memory in use. Of the allocated memory 103.70 GiB is allocated by PyTorch, and 609.28 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+
+qwen_2_5 out_terminal
+=========================
+[cache] All caches routed to /scratch/jjtribb
+Loaded 1283 questions from data/test_half_release.csv
+Questions to process: 1283
+Loading model: Qwen/Qwen2.5-VL-7B-Instruct
+
+video_llama3 outputs
+========================
+{"question_id": "v_00923_1", "pred": "I don't know", "error": "ERROR: TypeError: 'Undefined' object cannot be interpreted as an integer"}
+{"question_id": "v_00923_2", "pred": "I don't know", "error": "ERROR: TypeError: 'Undefined' object cannot be interpreted as an integer"}
+{"question_id": "v_00923_4", "pred": "I don't know", "error": "ERROR: TypeError: 'Undefined' object cannot be interpreted as an integer"}
+{"question_id": "v_00923_5", "pred": "I don't know", "error": "ERROR: TypeError: 'Undefined' object cannot be interpreted as an integer"}
+{"question_id": "v_00924_1", "pred": "I don't know", "error": "ERROR: TypeError: 'Undefined' object cannot be interpreted as an integer"}
+
+video_llama3 errors
+=========================
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]
+Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:05,  1.98s/it]
+Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:02,  1.41s/it]
+Loading checkpoint shards:  75%|███████▌  | 3/4 [00:03<00:01,  1.18s/it]
+Loading checkpoint shards: 100%|██████████| 4/4 [00:04<00:00,  1.18it/s]
+Loading checkpoint shards: 100%|██████████| 4/4 [00:04<00:00,  1.06s/it]
+Traceback (most recent call last):
+  File "/home/jjtribb/LLM_Hallucinations/experiment_1/scripts/01_run_inference.py", line 306, in main
+    pred = infer_fn(model, processor, frames, row.question)
+  File "/home/jjtribb/LLM_Hallucinations/experiment_1/scripts/01_run_inference.py", line 97, in infer_videollama3
+    text = processor.apply_chat_template(conversation, tokenize=False, add_generation_prompt=True)
+  File "/scratch/jjtribb/hf_cache/modules/transformers_modules/DAMO-NLP-SG/VideoLLaMA3-7B/d5b763e368861e7f5096e7ff1b49f92fbccf8ae6/processing_videollama3.py", line 758, in apply_chat_template
+    return self.tokenizer.apply_chat_template(
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/transformers/tokenization_utils_base.py", line 1695, in apply_chat_template
+    rendered_chat = compiled_template.render(
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/jinja2/environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/jinja2/environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "<template>", line 32, in top-level template code
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/jinja2/sandbox.py", line 401, in call
+    return __context.call(__obj, *args, **kwargs)
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/jinja2/sandbox.py", line 91, in safe_range
+    rng = range(*args)
+TypeError: 'Undefined' object cannot be interpreted as an integer
+Traceback (most recent call last):
+  File "/home/jjtribb/LLM_Hallucinations/experiment_1/scripts/01_run_inference.py", line 306, in main
+    pred = infer_fn(model, processor, frames, row.question)
+  File "/home/jjtribb/LLM_Hallucinations/experiment_1/scripts/01_run_inference.py", line 97, in infer_videollama3
+    text = processor.apply_chat_template(conversation, tokenize=False, add_generation_prompt=True)
+  File "/scratch/jjtribb/hf_cache/modules/transformers_modules/DAMO-NLP-SG/VideoLLaMA3-7B/d5b763e368861e7f5096e7ff1b49f92fbccf8ae6/processing_videollama3.py", line 758, in apply_chat_template
+    return self.tokenizer.apply_chat_template(
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/transformers/tokenization_utils_base.py", line 1695, in apply_chat_template
+    rendered_chat = compiled_template.render(
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/jinja2/environment.py", line 1295, in render
+    self.environment.handle_exception()
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/jinja2/environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "<template>", line 32, in top-level template code
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/jinja2/sandbox.py", line 401, in call
+    return __context.call(__obj, *args, **kwargs)
+  File "/home/jjtribb/.conda/envs/exp1/lib/python3.10/site-packages/jinja2/sandbox.py", line 91, in safe_range
+    rng = range(*args)
+TypeError: 'Undefined' object cannot be interpreted as an integer
+Traceback (most recent call last):
+
+
+
+
+The only model that is mildly functioning is InternVL, which is also the smallest model. The other three models are all encountering significant issues, with qwen2_5 running out of memory, llava_onevision having a chat template error, and internvl2_5 having a video decoding error.
+

@@ -105,6 +105,16 @@ def load_videollama3(model_id: str):
 
 def infer_videollama3(model, processor, frames: list, question: str, **kwargs) -> str:
     prompt = PROMPT_TEMPLATE.format(question=question)
+    # Cap resolution to avoid OOM: VideoLLaMA3 uses dynamic tiling and has no
+    # built-in max_pixels setting.  At native video resolution each frame can
+    # produce dozens of tiles, driving attention memory to 100+ GiB.
+    # thumbnail() downsizes in-place while preserving aspect ratio.
+    MAX_SIDE = 336
+    frames = [f.copy() for f in frames]
+    for f in frames:
+        f.thumbnail((MAX_SIDE, MAX_SIDE))
+    # Use every other frame (8 instead of 16) to halve visual token count.
+    frames = frames[::2] if len(frames) > 8 else frames
     # When images= is provided, _load_multimodal_data (and therefore load_video /
     # ffprobe) is skipped entirely.  We still need num_frames in the conversation
     # so the Jinja template can do range(content.num_frames) without Undefined.
