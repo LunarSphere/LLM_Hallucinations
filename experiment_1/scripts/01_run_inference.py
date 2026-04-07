@@ -84,23 +84,28 @@ def load_videollama3(model_id: str):
 
 def infer_videollama3(model, processor, frames: list, question: str) -> str:
     prompt = PROMPT_TEMPLATE.format(question=question)
-    # VideoLLaMA3 uses a <video> placeholder; pass frames as the video input
+    # VideoLLaMA3 requires processor(conversation=...) API — NOT apply_chat_template
+    # + videos= separately.  The Jinja template derives num_frames from the video
+    # object, so both must travel together.  Pass frames as (T,H,W,3) numpy array.
+    frames_np = np.stack([np.array(f) for f in frames])  # (T, H, W, 3) uint8
     conversation = [
+        {"role": "system", "content": "You are a helpful assistant."},
         {
             "role": "user",
             "content": [
-                {"type": "video"},
+                {"type": "video", "video": frames_np},
                 {"type": "text", "text": prompt},
             ],
-        }
+        },
     ]
-    text = processor.apply_chat_template(conversation, tokenize=False, add_generation_prompt=True)
-    inputs = processor(text=text, videos=[frames], return_tensors="pt").to(model.device)
+    inputs = processor(conversation=conversation, return_tensors="pt")
+    inputs = {k: v.to(model.device) if isinstance(v, torch.Tensor) else v for k, v in inputs.items()}
+    if "pixel_values" in inputs:
+        inputs["pixel_values"] = inputs["pixel_values"].to(torch.bfloat16)
     with torch.no_grad():
-        output_ids = model.generate(**inputs, max_new_tokens=128, do_sample=False)
-    # Strip the input tokens from the output
+        output_ids = model.generate(**inputs, max_new_tokens=128)
     generated = output_ids[:, inputs["input_ids"].shape[1]:]
-    return processor.decode(generated[0], skip_special_tokens=True).strip()
+    return processor.batch_decode(generated, skip_special_tokens=True)[0].strip()
 
 
 def load_internvl2_5(model_id: str):
@@ -189,6 +194,26 @@ def load_llava_onevision(model_id: str):
         rms_norm_eps=1e-6,
     )
     processor = AutoProcessor.from_pretrained(model_id, use_fast=True)
+    # The lmms-lab upload has no chat_template in the tokenizer config.
+    # Inject a Qwen2-style template that handles multimodal content lists.
+    if not getattr(processor.tokenizer, "chat_template", None):
+        processor.tokenizer.chat_template = (
+            "{% for message in messages %}"
+            "{% if loop.first and messages[0]['role'] != 'system' %}"
+            "{{ '<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n' }}"
+            "{% endif %}"
+            "{{'<|im_start|>' + message['role'] + '\n'}}"
+            "{% if message['content'] is string %}{{ message['content'] }}"
+            "{% else %}"
+            "{% for content in message['content'] %}"
+            "{% if content['type'] == 'image' %}{{ '<image>\n' }}"
+            "{% elif content['type'] == 'text' %}{{ content['text'] }}"
+            "{% endif %}{% endfor %}"
+            "{% endif %}"
+            "{{ '<|im_end|>\n' }}"
+            "{% endfor %}"
+            "{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}"
+        )
     model = LlavaOnevisionForConditionalGeneration.from_pretrained(
         model_id, config=config, torch_dtype=torch.bfloat16, device_map="auto",
     )
@@ -216,7 +241,15 @@ def infer_llava_onevision(model, processor, frames: list, question: str) -> str:
 
 def load_qwen2_5_vl(model_id: str):
     from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
-    processor = AutoProcessor.from_pretrained(model_id)
+    # max_pixels caps each frame's visual token count to avoid OOM.
+    # Default (1280*28*28 ≈ 1M px/frame) × 16 frames exhausts GPU memory;
+    # 256*28*28 ≈ 200K px/frame keeps the attention computation tractable.
+    processor = AutoProcessor.from_pretrained(
+        model_id,
+        use_fast=True,
+        min_pixels=128 * 28 * 28,
+        max_pixels=256 * 28 * 28,
+    )
     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
         model_id, torch_dtype=torch.bfloat16, device_map="auto"
     )
