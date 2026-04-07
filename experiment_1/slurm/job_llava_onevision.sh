@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=egoblind_videollama3
+#SBATCH --job-name=egoblind_llava_onevision
 #SBATCH --nodes 1 
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem-per-cpu 8gb
 #SBATCH --gpus-per-task h100:1
 #SBATCH --time 12:00:00   
-#SBATCH --output=logs/videollama3_%j.out
-#SBATCH --error=logs/videollama3_%j.err
+#SBATCH --output=logs/llava_onevision_%j.out
+#SBATCH --error=logs/llava_onevision_%j.err
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=jjtribb@clemson.edu
 
