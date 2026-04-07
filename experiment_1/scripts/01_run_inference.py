@@ -155,10 +155,13 @@ def infer_internvl2_5(model, tokenizer, frames: list, question: str) -> str:
 def load_llava_onevision(model_id: str):
     from transformers import LlavaOnevisionForConditionalGeneration, AutoProcessor, LlavaOnevisionConfig
     processor = AutoProcessor.from_pretrained(model_id, use_fast=True)
-    # lmms-lab model config.json has model_type=llava; explicitly load as
-    # LlavaOnevisionConfig so the vision tower gets the correct architecture
-    # (SiGLIP with 16 heads) instead of the mismatched LlavaConfig shape.
+    # lmms-lab/llava-onevision-qwen2-7b-ov config.json ships with
+    # model_type=llava and vision_config.num_attention_heads=14, neither of
+    # which is correct for this model.  Load explicitly as LlavaOnevisionConfig
+    # and patch the head count so SiGLIP-SO400M (embed_dim=1152) initialises
+    # correctly (1152 / 16 = 72; 1152 / 14 is not an integer → crash).
     config = LlavaOnevisionConfig.from_pretrained(model_id)
+    config.vision_config.num_attention_heads = 16
     model = LlavaOnevisionForConditionalGeneration.from_pretrained(
         model_id, config=config, torch_dtype=torch.bfloat16, device_map="auto",
     )

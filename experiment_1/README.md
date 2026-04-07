@@ -44,7 +44,7 @@ pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.6.
 
 ```bash
 srun --pty --partition=work1 --mem=32G --time=02:00:00 bash
-conda activate egoblind_exp1
+conda activate exp1
 source /home/jjtribb/LLM_Hallucinations/experiment_1/scripts/set_cache_dirs.sh
 cd /home/jjtribb/LLM_Hallucinations/experiment_1
 python scripts/preload.py
