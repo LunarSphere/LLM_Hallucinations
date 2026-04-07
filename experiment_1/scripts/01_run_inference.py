@@ -128,15 +128,23 @@ def infer_videollama3(model, processor, frames: list, question: str, **kwargs) -
             ],
         },
     ]
-    # images expects BatchedImage: a list of videos, each video a list of PIL frames
-    inputs = processor(conversation=conversation, images=[frames], return_tensors="pt")
+    # images expects BatchedImage: a list of videos, each video a list of PIL frames.
+    # add_system_prompt/add_generation_prompt match the official inference example.
+    inputs = processor(
+        conversation=conversation,
+        images=[frames],
+        add_system_prompt=True,
+        add_generation_prompt=True,
+        return_tensors="pt",
+    )
     inputs = {k: v.to(model.device) if isinstance(v, torch.Tensor) else v for k, v in inputs.items()}
     if "pixel_values" in inputs:
         inputs["pixel_values"] = inputs["pixel_values"].to(torch.bfloat16)
     with torch.no_grad():
         output_ids = model.generate(**inputs, max_new_tokens=128)
-    generated = output_ids[:, inputs["input_ids"].shape[1]:]
-    return processor.batch_decode(generated, skip_special_tokens=True)[0].strip()
+    # VideoLLaMA3's custom generate returns only the newly generated tokens
+    # (not input + generated), so decode output_ids directly without slicing.
+    return processor.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
 
 
 def load_internvl2_5(model_id: str):
