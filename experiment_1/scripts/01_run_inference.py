@@ -153,17 +153,23 @@ def infer_internvl2_5(model, tokenizer, frames: list, question: str) -> str:
 
 
 def load_llava_onevision(model_id: str):
-    from transformers import LlavaOnevisionForConditionalGeneration, AutoProcessor, LlavaOnevisionConfig
+    import json
+    from huggingface_hub import hf_hub_download
+    from transformers import LlavaOnevisionForConditionalGeneration, AutoProcessor
+    # lmms-lab/llava-onevision-qwen2-7b-ov ships with model_type=llava in its
+    # config.json, which causes transformers to mis-parse the entire nested
+    # config (wrong text hidden_size, wrong vision num_heads, etc.).  Patch the
+    # cached file once so every subsequent load sees the correct model_type.
+    config_path = hf_hub_download(model_id, "config.json")
+    with open(config_path) as f:
+        cfg = json.load(f)
+    if cfg.get("model_type") == "llava":
+        cfg["model_type"] = "llava_onevision"
+        with open(config_path, "w") as f:
+            json.dump(cfg, f, indent=2)
     processor = AutoProcessor.from_pretrained(model_id, use_fast=True)
-    # lmms-lab/llava-onevision-qwen2-7b-ov config.json ships with
-    # model_type=llava and vision_config.num_attention_heads=14, neither of
-    # which is correct for this model.  Load explicitly as LlavaOnevisionConfig
-    # and patch the head count so SiGLIP-SO400M (embed_dim=1152) initialises
-    # correctly (1152 / 16 = 72; 1152 / 14 is not an integer → crash).
-    config = LlavaOnevisionConfig.from_pretrained(model_id)
-    config.vision_config.num_attention_heads = 16
     model = LlavaOnevisionForConditionalGeneration.from_pretrained(
-        model_id, config=config, torch_dtype=torch.bfloat16, device_map="auto",
+        model_id, torch_dtype=torch.bfloat16, device_map="auto",
     )
     model.eval()
     return model, processor
