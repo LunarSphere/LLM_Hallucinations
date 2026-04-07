@@ -160,24 +160,23 @@ def load_llava_onevision(model_id: str):
     # config.json, which causes transformers to mis-parse the entire nested
     # config (wrong text hidden_size, wrong vision num_heads, etc.).  Patch the
     # cached file once so every subsequent load sees the correct model_type.
+    # Patch model_type in the cached config.json so transformers parses the
+    # full nested config (text + vision) correctly.
     config_path = hf_hub_download(model_id, "config.json")
     with open(config_path) as f:
         cfg = json.load(f)
-    dirty = False
     if cfg.get("model_type") == "llava":
         cfg["model_type"] = "llava_onevision"
-        dirty = True
-    # SiGLIP-SO400M needs 16 heads for embed_dim=1152; HF upload has 14
-    vc = cfg.get("vision_config", {})
-    if vc.get("num_attention_heads") == 14:
-        cfg["vision_config"]["num_attention_heads"] = 16
-        dirty = True
-    if dirty:
         with open(config_path, "w") as f:
             json.dump(cfg, f, indent=2)
+    from transformers import LlavaOnevisionConfig
+    config = LlavaOnevisionConfig.from_pretrained(model_id)
+    # vision_config.num_attention_heads must divide embed_dim=1152 evenly.
+    # The HF upload has 14 (wrong); SiGLIP-SO400M needs 16.
+    config.vision_config.num_attention_heads = 16
     processor = AutoProcessor.from_pretrained(model_id, use_fast=True)
     model = LlavaOnevisionForConditionalGeneration.from_pretrained(
-        model_id, torch_dtype=torch.bfloat16, device_map="auto",
+        model_id, config=config, torch_dtype=torch.bfloat16, device_map="auto",
     )
     model.eval()
     return model, processor
