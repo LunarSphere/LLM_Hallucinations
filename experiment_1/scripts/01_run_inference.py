@@ -42,6 +42,27 @@ PROMPT_TEMPLATE = (
     "Question: {question}"
 )
 
+# Chat template for lmms-lab/llava-onevision-qwen2-7b-ov.  The model upload has
+# no chat_template in tokenizer_config.json; passing it explicitly to
+# apply_chat_template is more reliable than setting it on the processor object.
+_LLAVA_OV_CHAT_TEMPLATE = (
+    "{% for message in messages %}"
+    "{% if loop.first and messages[0]['role'] != 'system' %}"
+    "{{ '<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n' }}"
+    "{% endif %}"
+    "{{'<|im_start|>' + message['role'] + '\n'}}"
+    "{% if message['content'] is string %}{{ message['content'] }}"
+    "{% else %}"
+    "{% for content in message['content'] %}"
+    "{% if content['type'] == 'image' %}{{ '<image>\n' }}"
+    "{% elif content['type'] == 'text' %}{{ content['text'] }}"
+    "{% endif %}{% endfor %}"
+    "{% endif %}"
+    "{{ '<|im_end|>\n' }}"
+    "{% endfor %}"
+    "{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}"
+)
+
 
 # ─── Video utilities ──────────────────────────────────────────────────────────
 
@@ -82,18 +103,23 @@ def load_videollama3(model_id: str):
     return model, processor
 
 
-def infer_videollama3(model, processor, frames: list, question: str) -> str:
+def infer_videollama3(model, processor, frames: list, question: str,
+                      video_path: str = None, end_time: float = None,
+                      num_frames: int = 16, **kwargs) -> str:
     prompt = PROMPT_TEMPLATE.format(question=question)
-    # VideoLLaMA3 requires processor(conversation=...) API — NOT apply_chat_template
-    # + videos= separately.  The Jinja template derives num_frames from the video
-    # object, so both must travel together.  Pass frames as (T,H,W,3) numpy array.
-    frames_np = np.stack([np.array(f) for f in frames])  # (T, H, W, 3) uint8
+    # VideoLLaMA3's Jinja chat template resolves num_frames from the video spec,
+    # so video data and template must travel together via processor(conversation=...).
+    # Use the official video_path API; compute fps to match our uniform sampling.
+    valid_end = end_time and not np.isnan(float(end_time)) and end_time > 0
+    duration = float(end_time) if valid_end else None
+    fps = (num_frames / duration) if duration else 1.0
+    video_spec = {"video_path": video_path, "fps": fps, "max_frames": num_frames}
     conversation = [
         {"role": "system", "content": "You are a helpful assistant."},
         {
             "role": "user",
             "content": [
-                {"type": "video", "video": frames_np},
+                {"type": "video", "video": video_spec},
                 {"type": "text", "text": prompt},
             ],
         },
@@ -118,7 +144,7 @@ def load_internvl2_5(model_id: str):
     return model, tokenizer
 
 
-def infer_internvl2_5(model, tokenizer, frames: list, question: str) -> str:
+def infer_internvl2_5(model, tokenizer, frames: list, question: str, **kwargs) -> str:
     import torchvision.transforms as T
     from torchvision.transforms.functional import InterpolationMode
 
@@ -221,9 +247,8 @@ def load_llava_onevision(model_id: str):
     return model, processor
 
 
-def infer_llava_onevision(model, processor, frames: list, question: str) -> str:
+def infer_llava_onevision(model, processor, frames: list, question: str, **kwargs) -> str:
     prompt = PROMPT_TEMPLATE.format(question=question)
-    # Build conversation with one image placeholder per frame
     image_content = [{"type": "image"} for _ in frames]
     conversation = [
         {
@@ -231,7 +256,14 @@ def infer_llava_onevision(model, processor, frames: list, question: str) -> str:
             "content": image_content + [{"type": "text", "text": prompt}],
         }
     ]
-    text = processor.apply_chat_template(conversation, tokenize=False, add_generation_prompt=True)
+    # Pass template explicitly — more reliable than relying on processor.chat_template
+    # or processor.tokenizer.chat_template, which are unset in the lmms-lab upload.
+    text = processor.apply_chat_template(
+        conversation,
+        chat_template=_LLAVA_OV_CHAT_TEMPLATE,
+        tokenize=False,
+        add_generation_prompt=True,
+    )
     inputs = processor(text=text, images=frames, return_tensors="pt").to(model.device)
     with torch.no_grad():
         output_ids = model.generate(**inputs, max_new_tokens=128, do_sample=False)
@@ -257,7 +289,7 @@ def load_qwen2_5_vl(model_id: str):
     return model, processor
 
 
-def infer_qwen2_5_vl(model, processor, frames: list, question: str) -> str:
+def infer_qwen2_5_vl(model, processor, frames: list, question: str, **kwargs) -> str:
     prompt = PROMPT_TEMPLATE.format(question=question)
     # One {"type": "image"} dict per frame in the message content
     image_content = [{"type": "image", "image": frame} for frame in frames]
@@ -362,8 +394,10 @@ def main(args):
                 end_time = getattr(row, "start-time/s", None)
                 frames = extract_frames(str(video_path), end_time, num_frames=args.num_frames)
 
-                # Run inference
-                pred = infer_fn(model, processor, frames, row.question)
+                # Run inference (video_path/end_time/num_frames used by VideoLLaMA3)
+                pred = infer_fn(model, processor, frames, row.question,
+                                video_path=str(video_path), end_time=end_time,
+                                num_frames=args.num_frames)
 
                 out_f.write(json.dumps({"question_id": row.question_id, "pred": pred}) + "\n")
                 out_f.flush()
