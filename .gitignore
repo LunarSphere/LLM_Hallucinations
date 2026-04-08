@@ -1,7 +1,8 @@
 # Experiment outputs (large files, not tracked in git)
 experiment_1/outputs/
 experiment_1/logs/
-experiment_1/data/
+experiment_1/results/
+# experiment_1/data/
 
 # EgoBlind repo clone
 experiment_1/_egoblind_repo/

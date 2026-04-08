@@ -41,3 +41,6 @@ Fix the `preload.py` and `environment.yaml` in `experiment_1/` for the EgoBlind 
 
 
 Some of our videos are corrupt
+video id v_01051 and v_01306 are corrupt 
+one has a bad codec packet the other leaves the video decoder in a bad state causing subsequent videos to fail as well.
+bad_ids = {'v_01051_1', 'v_01306_2', 'v_01306_3', 'v_01306_4', 'v_01306_6', 'v_01306_7', 'v_01306_8', 'v_01306_9'}
