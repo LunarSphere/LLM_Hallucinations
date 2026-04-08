@@ -20,6 +20,7 @@ MODELS = [
     {"name": "InternVL2_5-8B",   "model_id": "OpenGVLab/InternVL2_5-8B"},
     {"name": "LLaVA-OneVision",  "model_id": "llava-hf/llava-onevision-qwen2-7b-ov-hf"},
     {"name": "Qwen2.5-VL",       "model_id": "Qwen/Qwen2.5-VL-7B-Instruct"},
+    {"name": "Qwen3-VL",         "model_id": "Qwen/Qwen3-VL-8B-Instruct"},
 ]
 
 

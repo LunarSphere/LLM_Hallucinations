@@ -22,25 +22,37 @@ cp _egoblind_repo/eval.py .
 cp /path/to/test_half_release.csv data/test_half_release.csv
 ```
 
-### 3. Create the environment
+### 3. Create the environments
 
 The conda solver hangs on Palmetto when resolving pytorch/nvidia channels. Use a bare
-conda env for Python only, then install everything via pip:
+conda env for Python only, then install everything via pip.
 
+**Primary environment** (VideoLLaMA3, InternVL2.5, LLaVA-OneVision, Qwen2.5-VL):
 ```bash
-conda create -n egoblind_exp1 python=3.10 -y
-conda activate egoblind_exp1
+conda create -n exp1 python=3.10 -y
+conda activate exp1
 pip install -r requirements.txt
 ```
 
+**Qwen3-VL environment** (requires `transformers>=4.57.0`, separate from the others):
+```bash
+conda create -n exp1_qwen3 python=3.10 -y
+conda activate exp1_qwen3
+pip install -r requirements_qwen3_vl.txt
+```
+
 InternVL2.5 requires `flash-attn`. Building from source fails on Palmetto due to
-GCC/CUDA version constraints. Install the precompiled wheel instead:
+GCC/CUDA version constraints. Install the precompiled wheel instead (into `exp1`):
 
 ```bash
+conda activate exp1
 pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.6.3/flash_attn-2.6.3+cu118torch2.4cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
 ```
 
-### 4. Pre-download all 5 models (do this on an interactive node with internet access)
+### 4. Pre-download all models (do this on an interactive node with internet access)
+
+`preload.py` downloads all models including Qwen3-VL; you only need `exp1` active since
+it uses `snapshot_download` (no model class instantiation).
 
 ```bash
 srun --pty --partition=work1 --mem=32G --time=02:00:00 bash
@@ -68,7 +80,7 @@ python scripts/00_consolidate_videos.py \
 python scripts/00_consolidate_videos.py --dry_run
 ```
 
-### Step 2 — Submit all 5 inference jobs (can run in parallel)
+### Step 2 — Submit all inference jobs (can run in parallel)
 
 ```bash
 cd /LLM_Hallucinations/experiment_1
@@ -77,8 +89,9 @@ J1=$(sbatch --parsable slurm/job_videollama3.sh)
 J2=$(sbatch --parsable slurm/job_internvl2_5.sh)
 J3=$(sbatch --parsable slurm/job_llava_onevision.sh)
 J4=$(sbatch --parsable slurm/job_qwen2_5_vl.sh)
+J5=$(sbatch --parsable slurm/job_qwen3_vl.sh)
 
-echo "Submitted jobs: $J1 $J2 $J3 $J4"
+echo "Submitted jobs: $J1 $J2 $J3 $J4 $J5"
 ```
 
 Monitor progress:
@@ -92,7 +105,7 @@ tail -f logs/qwen2_5_vl_<jobid>.out
 ```bash
 # Replace your OpenAI API key in slurm/job_evaluate.sh first!
 # Then:
-sbatch --dependency=afterok:${J1}:${J2}:${J3}:${J4} slurm/job_evaluate.sh
+sbatch --dependency=afterok:${J1}:${J2}:${J3}:${J4}:${J5} slurm/job_evaluate.sh
 ```
 
 This runs `eval.py` (the official EgoBlind evaluator) for all 5 models, then
@@ -126,3 +139,6 @@ checks which `question_id`s are already in the output JSONL and skips them.
 - `eval.py` requires an OpenAI API key and takes ~18 minutes per model
 - InternVL2.5 requests 80G RAM due to higher memory overhead
 - Set `TRANSFORMERS_OFFLINE=1` in SLURM scripts after pre-downloading models
+- **Qwen3-VL** runs in the separate `exp1_qwen3` conda env (`requirements_qwen3_vl.txt`);
+  requires `transformers>=4.57.0` and `qwen-vl-utils>=0.0.14` which conflict with the
+  `transformers>=4.49.0` baseline used by the other four models

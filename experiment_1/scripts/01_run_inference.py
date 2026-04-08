@@ -14,7 +14,7 @@ Usage:
         --num_frames 16
 
 Supported --model values:
-    videollama3, internvl2_5, llava_onevision, qwen2_5_vl
+    videollama3, internvl2_5, llava_onevision, qwen2_5_vl, qwen3_vl
 """
 
 import argparse
@@ -260,6 +260,48 @@ def infer_qwen2_5_vl(model, processor, frames: list, question: str, **kwargs) ->
     return processor.decode(generated[0], skip_special_tokens=True).strip()
 
 
+def load_qwen3_vl(model_id: str):
+    from transformers import Qwen3VLForConditionalGeneration, AutoProcessor
+    # max_pixels caps visual token count per frame; same reasoning as Qwen2.5-VL.
+    # Qwen3-VL uses image_patch_size=16 (vs 14 in 2.5), so token counts differ
+    # slightly, but the same pixel budget keeps memory tractable.
+    processor = AutoProcessor.from_pretrained(
+        model_id,
+        use_fast=True,
+        min_pixels=128 * 28 * 28,
+        max_pixels=256 * 28 * 28,
+    )
+    model = Qwen3VLForConditionalGeneration.from_pretrained(
+        model_id, torch_dtype=torch.bfloat16, device_map="auto"
+    )
+    model.eval()
+    return model, processor
+
+
+def infer_qwen3_vl(model, processor, frames: list, question: str, **kwargs) -> str:
+    prompt = PROMPT_TEMPLATE.format(question=question)
+    image_content = [{"type": "image", "image": frame} for frame in frames]
+    messages = [
+        {
+            "role": "user",
+            "content": image_content + [{"type": "text", "text": prompt}],
+        }
+    ]
+    text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    inputs = processor(
+        text=[text],
+        images=frames,
+        return_tensors="pt",
+        padding=True,
+    ).to(model.device)
+    # Qwen3-VL's processor may add token_type_ids; model.generate does not accept them.
+    inputs.pop("token_type_ids", None)
+    with torch.no_grad():
+        output_ids = model.generate(**inputs, max_new_tokens=128, do_sample=False)
+    generated = output_ids[:, inputs["input_ids"].shape[1]:]
+    return processor.decode(generated[0], skip_special_tokens=True).strip()
+
+
 # ─── Model registry ───────────────────────────────────────────────────────────
 
 MODEL_REGISTRY = {
@@ -282,6 +324,11 @@ MODEL_REGISTRY = {
         "model_id": "Qwen/Qwen2.5-VL-7B-Instruct",
         "load_fn": load_qwen2_5_vl,
         "infer_fn": infer_qwen2_5_vl,
+    },
+    "qwen3_vl": {
+        "model_id": "Qwen/Qwen3-VL-8B-Instruct",
+        "load_fn": load_qwen3_vl,
+        "infer_fn": infer_qwen3_vl,
     },
 }
 
