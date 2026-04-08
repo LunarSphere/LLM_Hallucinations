@@ -314,9 +314,8 @@ def load_gemma4(model_id: str):
 
 def infer_gemma4(model, processor, frames: list, question: str, **kwargs) -> str:
     prompt = PROMPT_TEMPLATE.format(question=question)
-    # Gemma 4 31B weighs ~62 GB at bfloat16, leaving ~18 GB on H200 for activations.
-    # Subsample to 8 frames (256 tokens × 8 = 2048 visual tokens) to stay safe.
-    frames = frames[::2] if len(frames) > 8 else frames
+    # MoE model: all 26B params reside in VRAM (~52 GB at bfloat16) but only 4B are
+    # active per forward pass, so activation memory is small — 16 frames is fine.
     image_content = [{"type": "image", "image": frame} for frame in frames]
     messages = [
         {
@@ -366,7 +365,7 @@ MODEL_REGISTRY = {
         "infer_fn": infer_qwen3_vl,
     },
     "gemma4": {
-        "model_id": "google/gemma-4-31B-it",
+        "model_id": "google/gemma-4-26B-A4B-it",
         "load_fn": load_gemma4,
         "infer_fn": infer_gemma4,
     },

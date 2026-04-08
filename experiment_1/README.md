@@ -55,7 +55,7 @@ pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.6.
 it uses `snapshot_download` (no model class instantiation).
 
 > **Gemma 4 is a gated model.** Before running `preload.py`, log in to HuggingFace and accept
-> the model terms at `huggingface.co/google/gemma-4-31B-it`, then run `huggingface-cli login`.
+> the model terms at `huggingface.co/google/gemma-4-26B-A4B-it`, then run `huggingface-cli login`.
 
 ```bash
 srun --pty --partition=work1 --mem=32G --time=02:00:00 bash
@@ -138,9 +138,7 @@ checks which `question_id`s are already in the output JSONL and skips them.
 
 ## Notes
 
-- All models use **16 uniformly sampled frames** up to the question timestamp (`start-time/s`),
-  except Gemma 4 which subsamples to 8 frames internally (model weights occupy ~62 GB on H200,
-  leaving limited headroom for activations)
+- All models use **16 uniformly sampled frames** up to the question timestamp (`start-time/s`)
 - The prompt includes blind-user framing: *"You are assisting a blind person..."*
 - `eval.py` requires an OpenAI API key and takes ~18 minutes per model
 - InternVL2.5 requests 80G RAM due to higher memory overhead
@@ -148,5 +146,5 @@ checks which `question_id`s are already in the output JSONL and skips them.
 - **Qwen3-VL and Gemma 4** share the `exp1_qwen3` conda env (`requirements_qwen3_vl.txt`);
   requires `transformers>=4.57.0` and `qwen-vl-utils>=0.0.14` which conflict with the
   `transformers>=4.49.0` baseline used by the other four models
-- **Gemma 4 is gated** — accept terms at `huggingface.co/google/gemma-4-31B-it` and run
+- **Gemma 4 is gated** — accept terms at `huggingface.co/google/gemma-4-26B-A4B-it` and run
   `huggingface-cli login` before pre-downloading
