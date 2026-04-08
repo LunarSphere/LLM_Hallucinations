@@ -1,7 +1,7 @@
 """
 01_run_inference.py
 
-Unified inference script for all 5 EgoBlind models.
+Unified inference script for all EgoBlind models.
 Outputs a JSONL file with {"question_id": ..., "pred": ...} per line,
 matching the format expected by the EgoBlind eval.py script.
 
@@ -14,7 +14,7 @@ Usage:
         --num_frames 16
 
 Supported --model values:
-    videollama3, internvl2_5, llava_onevision, qwen2_5_vl, qwen3_vl
+    videollama3, internvl2_5, llava_onevision, qwen2_5_vl, qwen3_vl, gemma4
 """
 
 import argparse
@@ -302,6 +302,41 @@ def infer_qwen3_vl(model, processor, frames: list, question: str, **kwargs) -> s
     return processor.decode(generated[0], skip_special_tokens=True).strip()
 
 
+def load_gemma4(model_id: str):
+    from transformers import AutoProcessor, AutoModelForMultimodalLM
+    processor = AutoProcessor.from_pretrained(model_id)
+    model = AutoModelForMultimodalLM.from_pretrained(
+        model_id, torch_dtype=torch.bfloat16, device_map="auto"
+    )
+    model.eval()
+    return model, processor
+
+
+def infer_gemma4(model, processor, frames: list, question: str, **kwargs) -> str:
+    prompt = PROMPT_TEMPLATE.format(question=question)
+    # Gemma 4 31B weighs ~62 GB at bfloat16, leaving ~18 GB on H200 for activations.
+    # Subsample to 8 frames (256 tokens × 8 = 2048 visual tokens) to stay safe.
+    frames = frames[::2] if len(frames) > 8 else frames
+    image_content = [{"type": "image", "image": frame} for frame in frames]
+    messages = [
+        {
+            "role": "user",
+            "content": image_content + [{"type": "text", "text": prompt}],
+        }
+    ]
+    inputs = processor.apply_chat_template(
+        messages,
+        tokenize=True,
+        return_dict=True,
+        return_tensors="pt",
+        add_generation_prompt=True,
+    ).to(model.device)
+    input_len = inputs["input_ids"].shape[-1]
+    with torch.no_grad():
+        output_ids = model.generate(**inputs, max_new_tokens=128, do_sample=False)
+    return processor.decode(output_ids[0][input_len:], skip_special_tokens=True).strip()
+
+
 # ─── Model registry ───────────────────────────────────────────────────────────
 
 MODEL_REGISTRY = {
@@ -329,6 +364,11 @@ MODEL_REGISTRY = {
         "model_id": "Qwen/Qwen3-VL-8B-Instruct",
         "load_fn": load_qwen3_vl,
         "infer_fn": infer_qwen3_vl,
+    },
+    "gemma4": {
+        "model_id": "google/gemma-4-31B-it",
+        "load_fn": load_gemma4,
+        "infer_fn": infer_gemma4,
     },
 }
 

@@ -1,6 +1,6 @@
 # Experiment 1: EgoBlind Hallucination Evaluation
 
-Evaluates 5 open-source MLLMs on the EgoBlind benchmark to measure how often they
+Evaluates 6 open-source MLLMs on the EgoBlind benchmark to measure how often they
 hallucinate answers on unanswerable video QA questions (where the ground truth is "I don't know").
 
 ---
@@ -34,7 +34,7 @@ conda activate exp1
 pip install -r requirements.txt
 ```
 
-**Qwen3-VL environment** (requires `transformers>=4.57.0`, separate from the others):
+**Qwen3-VL / Gemma 4 environment** (requires `transformers>=4.57.0`, separate from the others):
 ```bash
 conda create -n exp1_qwen3 python=3.10 -y
 conda activate exp1_qwen3
@@ -51,8 +51,11 @@ pip install https://github.com/Dao-AILab/flash-attention/releases/download/v2.6.
 
 ### 4. Pre-download all models (do this on an interactive node with internet access)
 
-`preload.py` downloads all models including Qwen3-VL; you only need `exp1` active since
+`preload.py` downloads all models including Qwen3-VL and Gemma 4; you only need `exp1` active since
 it uses `snapshot_download` (no model class instantiation).
+
+> **Gemma 4 is a gated model.** Before running `preload.py`, log in to HuggingFace and accept
+> the model terms at `huggingface.co/google/gemma-4-31B-it`, then run `huggingface-cli login`.
 
 ```bash
 srun --pty --partition=work1 --mem=32G --time=02:00:00 bash
@@ -90,8 +93,9 @@ J2=$(sbatch --parsable slurm/job_internvl2_5.sh)
 J3=$(sbatch --parsable slurm/job_llava_onevision.sh)
 J4=$(sbatch --parsable slurm/job_qwen2_5_vl.sh)
 J5=$(sbatch --parsable slurm/job_qwen3_vl.sh)
+J6=$(sbatch --parsable slurm/job_gemma4.sh)
 
-echo "Submitted jobs: $J1 $J2 $J3 $J4 $J5"
+echo "Submitted jobs: $J1 $J2 $J3 $J4 $J5 $J6"
 ```
 
 Monitor progress:
@@ -105,10 +109,10 @@ tail -f logs/qwen2_5_vl_<jobid>.out
 ```bash
 # Replace your OpenAI API key in slurm/job_evaluate.sh first!
 # Then:
-sbatch --dependency=afterok:${J1}:${J2}:${J3}:${J4}:${J5} slurm/job_evaluate.sh
+sbatch --dependency=afterok:${J1}:${J2}:${J3}:${J4}:${J5}:${J6} slurm/job_evaluate.sh
 ```
 
-This runs `eval.py` (the official EgoBlind evaluator) for all 5 models, then
+This runs `eval.py` (the official EgoBlind evaluator) for all 6 models, then
 `02_analyze_hallucination.py` to compute IDK Rate and Hallucination Rate.
 
 ---
@@ -134,11 +138,15 @@ checks which `question_id`s are already in the output JSONL and skips them.
 
 ## Notes
 
-- All models use **16 uniformly sampled frames** up to the question timestamp (`start-time/s`)
+- All models use **16 uniformly sampled frames** up to the question timestamp (`start-time/s`),
+  except Gemma 4 which subsamples to 8 frames internally (model weights occupy ~62 GB on H200,
+  leaving limited headroom for activations)
 - The prompt includes blind-user framing: *"You are assisting a blind person..."*
 - `eval.py` requires an OpenAI API key and takes ~18 minutes per model
 - InternVL2.5 requests 80G RAM due to higher memory overhead
 - Set `TRANSFORMERS_OFFLINE=1` in SLURM scripts after pre-downloading models
-- **Qwen3-VL** runs in the separate `exp1_qwen3` conda env (`requirements_qwen3_vl.txt`);
+- **Qwen3-VL and Gemma 4** share the `exp1_qwen3` conda env (`requirements_qwen3_vl.txt`);
   requires `transformers>=4.57.0` and `qwen-vl-utils>=0.0.14` which conflict with the
   `transformers>=4.49.0` baseline used by the other four models
+- **Gemma 4 is gated** — accept terms at `huggingface.co/google/gemma-4-31B-it` and run
+  `huggingface-cli login` before pre-downloading

@@ -21,6 +21,7 @@ MODELS = [
     {"name": "LLaVA-OneVision",  "model_id": "llava-hf/llava-onevision-qwen2-7b-ov-hf"},
     {"name": "Qwen2.5-VL",       "model_id": "Qwen/Qwen2.5-VL-7B-Instruct"},
     {"name": "Qwen3-VL",         "model_id": "Qwen/Qwen3-VL-8B-Instruct"},
+    {"name": "Gemma4-31B",       "model_id": "google/gemma-4-31B-it"},
 ]
 
 
