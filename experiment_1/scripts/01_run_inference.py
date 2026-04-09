@@ -177,11 +177,14 @@ def infer_internvl2_5(model, tokenizer, frames: list, question: str, **kwargs) -
 
 def load_internvl3_5(model_id: str):
     from transformers import AutoTokenizer, AutoModel
-    # use_fast=False: InternVL3.5 uses a SentencePiece-based tokenizer.
-    # fix_mistral_regex=True: corrects a regex pattern inherited from Mistral
-    # that would otherwise produce incorrect tokenization (logged as a warning).
+    # use_fast=False: InternVL3.5 uses a SentencePiece-based slow tokenizer.
+    # Note: transformers may log a "fix_mistral_regex" warning for this model —
+    # this is a false positive (the check fires for any model saved with
+    # transformers >=4.57.3, not just Mistral).  Do NOT pass fix_mistral_regex=True:
+    # that flag calls _patch_mistral_regex which accesses .backend_tokenizer, an
+    # attribute that only exists on fast tokenizers and crashes on slow ones.
     tokenizer = AutoTokenizer.from_pretrained(
-        model_id, trust_remote_code=True, use_fast=False, fix_mistral_regex=True
+        model_id, trust_remote_code=True, use_fast=False
     )
     # use_flash_attn=False: custom kwarg in InternVL's remote code; set False
     # because exp1_qwen3 does not have the flash-attn wheel installed.

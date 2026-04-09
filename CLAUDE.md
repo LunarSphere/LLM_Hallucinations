@@ -153,7 +153,7 @@ Copy the closest existing script and change: `--job-name`, `--output`, `--error`
 - **flash-attn in `exp1_qwen3`**: not installed. For InternVL models pass `use_flash_attn=False` (custom model kwarg). For HF-native models use `attn_implementation="eager"`.
 - **`low_cpu_mem_usage=True` + `device_map="auto"`**: do NOT combine these for InternVL models. The combination initializes tensors as meta tensors; InternVL's vision encoder `__init__` calls `.item()` during drop-path-rate setup, which crashes with `RuntimeError: Tensor.item() cannot be called on meta tensors`. Omit `low_cpu_mem_usage` and let `device_map="auto"` handle placement alone.
 - **`torch_dtype` deprecated**: use `dtype=` instead in `from_pretrained()`.
-- **Mistral regex warning**: InternVL3.5's tokenizer inherits a Mistral regex pattern bug. Pass `fix_mistral_regex=True` to `AutoTokenizer.from_pretrained()` to suppress the warning and fix tokenization.
+- **Mistral regex warning (false positive)**: InternVL3.5 and other non-Mistral models saved with `transformers>=4.57.3` trigger a "fix_mistral_regex" warning — this is a false positive from overly broad detection logic. Do NOT pass `fix_mistral_regex=True` when using `use_fast=False`: `_patch_mistral_regex` accesses `.backend_tokenizer` which only exists on fast tokenizers and crashes on slow ones. Ignore the warning; tokenization is unaffected.
 - **Gated models**: run `huggingface-cli login` and accept terms before `preload.py`.
 - **`token_type_ids`**: Qwen3-VL's processor injects these; `model.generate()` rejects them — pop before generate: `inputs.pop("token_type_ids", None)`.
 - **Reasoning models**: use `max_new_tokens=512` to avoid truncating the `<think>` block before `<answer>` appears.
