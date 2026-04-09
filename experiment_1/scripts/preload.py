@@ -22,6 +22,7 @@ MODELS = [
     {"name": "Qwen2.5-VL",       "model_id": "Qwen/Qwen2.5-VL-7B-Instruct"},
     {"name": "Qwen3-VL",         "model_id": "Qwen/Qwen3-VL-8B-Instruct"},
     {"name": "Gemma4-26B-A4B-it",       "model_id": "google/gemma-4-26B-A4B-it"},
+    {"name": "VideoChat-R1-thinking-7B", "model_id": "OpenGVLab/VideoChat-R1-thinking_7B"},
 ]
 
 

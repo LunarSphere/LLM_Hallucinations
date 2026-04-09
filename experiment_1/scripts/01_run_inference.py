@@ -14,7 +14,7 @@ Usage:
         --num_frames 16
 
 Supported --model values:
-    videollama3, internvl2_5, llava_onevision, qwen2_5_vl, qwen3_vl, gemma4
+    videollama3, internvl2_5, llava_onevision, qwen2_5_vl, videochat_r1, qwen3_vl, gemma4
 """
 
 import argparse
@@ -260,6 +260,59 @@ def infer_qwen2_5_vl(model, processor, frames: list, question: str, **kwargs) ->
     return processor.decode(generated[0], skip_special_tokens=True).strip()
 
 
+def load_videochat_r1(model_id: str):
+    from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
+    # Same pixel budget as qwen2_5_vl: 256*28*28 ≈ 200K px/frame.  VideoChat-R1's
+    # longer thinking output increases KV pressure, so we keep the same cap.
+    processor = AutoProcessor.from_pretrained(
+        model_id,
+        use_fast=True,
+        min_pixels=128 * 28 * 28,
+        max_pixels=256 * 28 * 28,
+    )
+    model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+        model_id, torch_dtype=torch.bfloat16, device_map="auto"
+    )
+    model.eval()
+    return model, processor
+
+
+def infer_videochat_r1(model, processor, frames: list, question: str, **kwargs) -> str:
+    import re
+    base_prompt = PROMPT_TEMPLATE.format(question=question)
+    # Reinforce the structured output format the model was fine-tuned on.
+    # The IDK instruction is preserved verbatim in base_prompt; we only append
+    # format guidance so the model places the final answer in the <answer> tag.
+    prompt = base_prompt + "\nThink through your reasoning, then provide your final answer inside <answer>...</answer> tags."
+
+    image_content = [{"type": "image", "image": frame} for frame in frames]
+    messages = [
+        {
+            "role": "user",
+            "content": image_content + [{"type": "text", "text": prompt}],
+        }
+    ]
+    text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    inputs = processor(
+        text=[text],
+        images=frames,
+        return_tensors="pt",
+        padding=True,
+    ).to(model.device)
+    # 512 tokens accommodates full <think>...</think><answer>...</answer> chains.
+    # 128 (used by other models) would truncate mid-think before <answer> appears.
+    with torch.no_grad():
+        output_ids = model.generate(**inputs, max_new_tokens=512, do_sample=False)
+    generated = output_ids[:, inputs["input_ids"].shape[1]:]
+    raw = processor.decode(generated[0], skip_special_tokens=True).strip()
+
+    # Take the last <answer> tag (avoids false positives inside the think block).
+    matches = re.findall(r"<answer>(.*?)</answer>", raw, re.DOTALL)
+    if matches:
+        return matches[-1].strip()
+    return raw  # Fallback: return full output if tag absent (e.g. truncation)
+
+
 def load_qwen3_vl(model_id: str):
     from transformers import Qwen3VLForConditionalGeneration, AutoProcessor
     # max_pixels caps visual token count per frame; same reasoning as Qwen2.5-VL.
@@ -358,6 +411,11 @@ MODEL_REGISTRY = {
         "model_id": "Qwen/Qwen2.5-VL-7B-Instruct",
         "load_fn": load_qwen2_5_vl,
         "infer_fn": infer_qwen2_5_vl,
+    },
+    "videochat_r1": {
+        "model_id": "OpenGVLab/VideoChat-R1-thinking_7B",
+        "load_fn": load_videochat_r1,
+        "infer_fn": infer_videochat_r1,
     },
     "qwen3_vl": {
         "model_id": "Qwen/Qwen3-VL-8B-Instruct",
