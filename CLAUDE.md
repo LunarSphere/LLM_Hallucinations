@@ -98,6 +98,65 @@ Set `TRANSFORMERS_OFFLINE=1` in SLURM scripts after downloading.
 
 **Memory requirements**: InternVL2.5 requests 80G RAM; others use less.
 
+## Adding a New Model to Experiment 1
+
+Follow these steps in order. Each step maps to one file change. Always browse the HuggingFace model card before coding to verify the correct API, tokenizer flags, and transformers version requirements.
+
+### Step 1 — `01_run_inference.py`: write `load_` and `infer_` functions
+
+Add `load_<model_key>(model_id: str) -> (model, processor)` and `infer_<model_key>(model, processor, frames: list, question: str, **kwargs) -> str` near the other model implementations (before the `MODEL_REGISTRY` block). Base the new functions on the closest existing model:
+
+| Architecture | Template to copy | Notes |
+|---|---|---|
+| InternVL family | `load_internvl3_5` / `infer_internvl3_5` | `AutoModel` + `model.chat()`, `Frame{i}: <image>` tokens, `use_flash_attn=False` in `exp1_qwen3` |
+| Qwen-VL family | `load_qwen2_5_vl` / `infer_qwen2_5_vl` | `AutoProcessor` + standard HF `generate()` |
+| Reasoning/CoT | `infer_videochat_r1` | `<answer>` tag extraction, `max_new_tokens=512` |
+
+Update the module docstring at the top of `01_run_inference.py` to list the new `--model` key.
+
+### Step 2 — `01_run_inference.py`: add to `MODEL_REGISTRY`
+
+```python
+"model_key": {
+    "model_id": "org/repo-name",
+    "load_fn": load_model_key,
+    "infer_fn": infer_model_key,
+},
+```
+
+### Step 3 — `preload.py`: add to `MODELS` list
+
+```python
+{"name": "DisplayName", "model_id": "org/repo-name"},
+```
+
+### Step 4 — Create SLURM script `slurm/job_<model_key>.sh`
+
+Copy the closest existing script and change: `--job-name`, `--output`, `--error`, `--gpus-per-task` (h100 for older/smaller; h200 for newer/larger), `source activate` env, `--model` arg, and `--output` path.
+
+### Step 5 — Update `README.md`
+
+- Add `J<N>=$(sbatch --parsable slurm/job_<model_key>.sh)` to the submission block and update the `echo` line
+- Update `--dependency=afterok:...` to include `${J<N>}`
+- Add a bullet to Notes documenting environment and any special setup
+
+### Step 6 — Determine conda environment
+
+| Situation | Environment |
+|---|---|
+| Needs `transformers>=4.52` | `exp1_qwen3` (`requirements_qwen3_vl.txt`) — covers InternVL3.5, Qwen3-VL, Gemma4 |
+| Needs flash-attn + older transformers | `exp1` (`requirements.txt`) + precompiled wheel |
+| Conflicting dependency | New `exp1_<name>` env + new requirements file |
+
+### Common gotchas
+
+- **flash-attn in `exp1_qwen3`**: not installed. For InternVL models pass `use_flash_attn=False` (custom model kwarg). For HF-native models use `attn_implementation="eager"`.
+- **Gated models**: run `huggingface-cli login` and accept terms before `preload.py`.
+- **`token_type_ids`**: Qwen3-VL's processor injects these; `model.generate()` rejects them — pop before generate: `inputs.pop("token_type_ids", None)`.
+- **Reasoning models**: use `max_new_tokens=512` to avoid truncating the `<think>` block before `<answer>` appears.
+- **OOM on h100**: switch to h200 in the SLURM script.
+- **`use_fast=False`**: required by InternVL tokenizers (SentencePiece-based).
+
 ## Adding New Experiments
 
 Create a new `experiment_N/` directory with the same structure (`scripts/`, `slurm/`, `environment.yaml`, `README.md`). Add `experiment_N/outputs/`, `experiment_N/logs/`, and `experiment_N/data/` to `.gitignore`.

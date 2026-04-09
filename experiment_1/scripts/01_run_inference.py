@@ -14,7 +14,7 @@ Usage:
         --num_frames 16
 
 Supported --model values:
-    videollama3, internvl2_5, llava_onevision, qwen2_5_vl, videochat_r1, qwen3_vl, gemma4
+    videollama3, internvl2_5, internvl3_5, llava_onevision, qwen2_5_vl, videochat_r1, qwen3_vl, gemma4
 """
 
 import argparse
@@ -163,6 +163,65 @@ def infer_internvl2_5(model, tokenizer, frames: list, question: str, **kwargs) -
     image_tokens = "\n".join(["<image>"] * len(frames))
     prompt = PROMPT_TEMPLATE.format(question=question)
     full_prompt = f"{image_tokens}\n{prompt}"
+
+    generation_config = {"max_new_tokens": 128, "do_sample": False}
+    response = model.chat(
+        tokenizer,
+        pixel_values,
+        full_prompt,
+        generation_config,
+        num_patches_list=num_patches_list,
+    )
+    return response.strip()
+
+
+def load_internvl3_5(model_id: str):
+    from transformers import AutoTokenizer, AutoModel
+    # use_fast=False required by InternVL3.5's SentencePiece-based tokenizer.
+    tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True, use_fast=False)
+    # use_flash_attn is a custom kwarg in InternVL's remote modeling code (not
+    # standard HF attn_implementation).  Set False because exp1_qwen3 does not
+    # have the precompiled flash-attn wheel installed.
+    model = AutoModel.from_pretrained(
+        model_id,
+        torch_dtype=torch.bfloat16,
+        low_cpu_mem_usage=True,
+        use_flash_attn=False,
+        trust_remote_code=True,
+        device_map="auto",
+    )
+    model.eval()
+    return model, tokenizer
+
+
+def infer_internvl3_5(model, tokenizer, frames: list, question: str, **kwargs) -> str:
+    import torchvision.transforms as T
+    from torchvision.transforms.functional import InterpolationMode
+
+    IMAGENET_MEAN = (0.485, 0.456, 0.406)
+    IMAGENET_STD  = (0.229, 0.224, 0.225)
+
+    transform = T.Compose([
+        T.Resize((448, 448), interpolation=InterpolationMode.BICUBIC),
+        T.ToTensor(),
+        T.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+    ])
+
+    pixel_values_list = []
+    num_patches_list = []
+    for frame in frames:
+        pv = transform(frame.convert("RGB")).unsqueeze(0).to(torch.bfloat16).cuda()
+        pixel_values_list.append(pv)
+        num_patches_list.append(1)  # 1 patch per frame (no dynamic tiling)
+
+    pixel_values = torch.cat(pixel_values_list, dim=0)
+
+    # InternVL3.5 video format uses labelled frame tokens per the official HF
+    # docs, e.g. "Frame1: <image>\nFrame2: <image>\n...".  This differs from
+    # InternVL2.5 which uses bare "<image>\n" tokens.
+    image_tokens = "".join([f"Frame{i+1}: <image>\n" for i in range(len(frames))])
+    prompt = PROMPT_TEMPLATE.format(question=question)
+    full_prompt = f"{image_tokens}{prompt}"
 
     generation_config = {"max_new_tokens": 128, "do_sample": False}
     response = model.chat(
@@ -401,6 +460,11 @@ MODEL_REGISTRY = {
         "model_id": "OpenGVLab/InternVL2_5-8B",
         "load_fn": load_internvl2_5,
         "infer_fn": infer_internvl2_5,
+    },
+    "internvl3_5": {
+        "model_id": "OpenGVLab/InternVL3_5-8B",
+        "load_fn": load_internvl3_5,
+        "infer_fn": infer_internvl3_5,
     },
     "llava_onevision": {
         "model_id": "llava-hf/llava-onevision-qwen2-7b-ov-hf",

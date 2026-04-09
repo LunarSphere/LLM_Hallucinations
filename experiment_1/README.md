@@ -34,7 +34,7 @@ conda activate exp1
 pip install -r requirements.txt
 ```
 
-**Qwen3-VL / Gemma 4 environment** (requires `transformers>=4.57.0`, separate from the others):
+**Qwen3-VL / Gemma 4 / InternVL3.5 environment** (requires `transformers>=4.57.0`, separate from the others):
 ```bash
 conda create -n exp1_qwen3 python=3.10 -y
 conda activate exp1_qwen3
@@ -94,8 +94,9 @@ J3=$(sbatch --parsable slurm/job_llava_onevision.sh)
 J4=$(sbatch --parsable slurm/job_qwen2_5_vl.sh)
 J5=$(sbatch --parsable slurm/job_qwen3_vl.sh)
 J6=$(sbatch --parsable slurm/job_gemma4.sh)
+J7=$(sbatch --parsable slurm/job_internvl3_5.sh)
 
-echo "Submitted jobs: $J1 $J2 $J3 $J4 $J5 $J6"
+echo "Submitted jobs: $J1 $J2 $J3 $J4 $J5 $J6 $J7"
 ```
 
 Monitor progress:
@@ -109,10 +110,10 @@ tail -f logs/qwen2_5_vl_<jobid>.out
 ```bash
 # Replace your OpenAI API key in slurm/job_evaluate.sh first!
 # Then:
-sbatch --dependency=afterok:${J1}:${J2}:${J3}:${J4}:${J5}:${J6} slurm/job_evaluate.sh
+sbatch --dependency=afterok:${J1}:${J2}:${J3}:${J4}:${J5}:${J6}:${J7} slurm/job_evaluate.sh
 ```
 
-This runs `eval.py` (the official EgoBlind evaluator) for all 6 models, then
+This runs `eval.py` (the official EgoBlind evaluator) for all 7 models, then
 `02_analyze_hallucination.py` to compute IDK Rate and Hallucination Rate.
 
 ---
@@ -143,8 +144,10 @@ checks which `question_id`s are already in the output JSONL and skips them.
 - `eval.py` requires an OpenAI API key and takes ~18 minutes per model
 - InternVL2.5 requests 80G RAM due to higher memory overhead
 - Set `TRANSFORMERS_OFFLINE=1` in SLURM scripts after pre-downloading models
-- **Qwen3-VL and Gemma 4** share the `exp1_qwen3` conda env (`requirements_qwen3_vl.txt`);
+- **Qwen3-VL, Gemma 4, and InternVL3.5** share the `exp1_qwen3` conda env (`requirements_qwen3_vl.txt`);
   requires `transformers>=4.57.0` and `qwen-vl-utils>=0.0.14` which conflict with the
   `transformers>=4.49.0` baseline used by the other four models
+- **InternVL3.5** uses `use_flash_attn=False` (custom model kwarg) since `exp1_qwen3` does not
+  have the flash-attn wheel installed; uses `Frame{i}: <image>` token format for video frames
 - **Gemma 4 is gated** — accept terms at `huggingface.co/google/gemma-4-26B-A4B-it` and run
   `huggingface-cli login` before pre-downloading
