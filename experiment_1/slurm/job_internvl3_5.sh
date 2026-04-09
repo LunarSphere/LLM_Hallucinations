@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=10
 #SBATCH --mem-per-cpu 8gb
 #SBATCH --gpus-per-task h200:1
-#SBATCH --time 12:00:00
+#SBATCH --time 04:00:00
 #SBATCH --output=logs/internvl3_5_%j.out
 #SBATCH --error=logs/internvl3_5_%j.err
 #SBATCH --mail-type=END,FAIL
