@@ -177,15 +177,20 @@ def infer_internvl2_5(model, tokenizer, frames: list, question: str, **kwargs) -
 
 def load_internvl3_5(model_id: str):
     from transformers import AutoTokenizer, AutoModel
-    # use_fast=False required by InternVL3.5's SentencePiece-based tokenizer.
-    tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True, use_fast=False)
-    # use_flash_attn is a custom kwarg in InternVL's remote modeling code (not
-    # standard HF attn_implementation).  Set False because exp1_qwen3 does not
-    # have the precompiled flash-attn wheel installed.
+    # use_fast=False: InternVL3.5 uses a SentencePiece-based tokenizer.
+    # fix_mistral_regex=True: corrects a regex pattern inherited from Mistral
+    # that would otherwise produce incorrect tokenization (logged as a warning).
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_id, trust_remote_code=True, use_fast=False, fix_mistral_regex=True
+    )
+    # use_flash_attn=False: custom kwarg in InternVL's remote code; set False
+    # because exp1_qwen3 does not have the flash-attn wheel installed.
+    # low_cpu_mem_usage omitted: combining it with device_map="auto" causes
+    # InternVL's vision encoder __init__ to receive meta tensors, which then
+    # crashes when the drop-path-rate listcomp calls .item() on them.
     model = AutoModel.from_pretrained(
         model_id,
-        torch_dtype=torch.bfloat16,
-        low_cpu_mem_usage=True,
+        dtype=torch.bfloat16,
         use_flash_attn=False,
         trust_remote_code=True,
         device_map="auto",
