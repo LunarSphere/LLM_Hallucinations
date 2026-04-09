@@ -108,7 +108,7 @@ Add `load_<model_key>(model_id: str) -> (model, processor)` and `infer_<model_ke
 
 | Architecture | Template to copy | Notes |
 |---|---|---|
-| InternVL family | `load_internvl3_5` / `infer_internvl3_5` | `AutoModel` + `model.chat()`, `Frame{i}: <image>` tokens, `use_flash_attn=False` in `exp1_qwen3` |
+| InternVL family | `load_internvl3_5` / `infer_internvl3_5` | Use the `-HF` checkpoint; `AutoProcessor` + `AutoModelForImageTextToText`, standard HF generate pipeline |
 | Qwen-VL family | `load_qwen2_5_vl` / `infer_qwen2_5_vl` | `AutoProcessor` + standard HF `generate()` |
 | Reasoning/CoT | `infer_videochat_r1` | `<answer>` tag extraction, `max_new_tokens=512` |
 
@@ -151,9 +151,8 @@ Copy the closest existing script and change: `--job-name`, `--output`, `--error`
 ### Common gotchas
 
 - **flash-attn in `exp1_qwen3`**: not installed. For InternVL models pass `use_flash_attn=False` (custom model kwarg). For HF-native models use `attn_implementation="eager"`.
-- **`low_cpu_mem_usage=True` + `device_map="auto"`**: do NOT combine these for InternVL models. The combination initializes tensors as meta tensors; InternVL's vision encoder `__init__` calls `.item()` during drop-path-rate setup, which crashes with `RuntimeError: Tensor.item() cannot be called on meta tensors`. Omit `low_cpu_mem_usage` and let `device_map="auto"` handle placement alone.
 - **`torch_dtype` deprecated**: use `dtype=` instead in `from_pretrained()`.
-- **Mistral regex warning (false positive)**: InternVL3.5 and other non-Mistral models saved with `transformers>=4.57.3` trigger a "fix_mistral_regex" warning — this is a false positive from overly broad detection logic. Do NOT pass `fix_mistral_regex=True` when using `use_fast=False`: `_patch_mistral_regex` accesses `.backend_tokenizer` which only exists on fast tokenizers and crashes on slow ones. Ignore the warning; tokenization is unaffected.
+- **InternVL remote-code crashes**: the original `OpenGVLab/InternVL3_5-8B` checkpoint uses custom modeling code (`trust_remote_code=True`) whose vision encoder `__init__` calls `.item()` on tensors that `device_map="auto"` initializes as meta tensors → `RuntimeError: Tensor.item() cannot be called on meta tensors`. **Use the `-HF` checkpoint instead** (`OpenGVLab/InternVL3_5-8B-HF`) which is the native HuggingFace implementation using `AutoProcessor` + `AutoModelForImageTextToText` with no custom code and no meta-tensor issue.
 - **Gated models**: run `huggingface-cli login` and accept terms before `preload.py`.
 - **`token_type_ids`**: Qwen3-VL's processor injects these; `model.generate()` rejects them — pop before generate: `inputs.pop("token_type_ids", None)`.
 - **Reasoning models**: use `max_new_tokens=512` to avoid truncating the `<think>` block before `<answer>` appears.
