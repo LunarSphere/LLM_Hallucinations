@@ -1,0 +1,22 @@
+--extra-index-url https://download.pytorch.org/whl/cu118
+torch==2.6.0+cu118
+torchvision==0.21.0+cu118
+transformers>=4.57.1
+accelerate
+decord
+Pillow
+numpy
+pandas
+openai
+tenacity
+einops
+timm
+sentencepiece
+tabulate
+tiktoken
+protobuf
+opencv-python
+requests
+imageio
+ffmpeg-python
+# flash-attn: not needed for GLM-4.1V (standard HF generate pipeline)

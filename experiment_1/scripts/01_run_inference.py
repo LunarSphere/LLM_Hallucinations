@@ -14,7 +14,7 @@ Usage:
         --num_frames 16
 
 Supported --model values:
-    videollama3, internvl2_5, internvl3_5, llava_onevision, qwen2_5_vl, videochat_r1, qwen3_vl, gemma4
+    videollama3, internvl2_5, internvl3_5, llava_onevision, qwen2_5_vl, videochat_r1, qwen3_vl, gemma4, glm4_1v
 """
 
 import argparse
@@ -431,6 +431,57 @@ def infer_gemma4(model, processor, frames: list, question: str, **kwargs) -> str
     return processor.decode(output_ids[0][input_len:], skip_special_tokens=True).strip()
 
 
+def load_glm4_1v(model_id: str):
+    from transformers import AutoProcessor, Glm4vForConditionalGeneration
+    processor = AutoProcessor.from_pretrained(model_id, use_fast=True)
+    model = Glm4vForConditionalGeneration.from_pretrained(
+        model_id,
+        torch_dtype=torch.bfloat16,
+        device_map="auto",
+    )
+    model.eval()
+    return model, processor
+
+
+def infer_glm4_1v(model, processor, frames: list, question: str, **kwargs) -> str:
+    import re
+    prompt = PROMPT_TEMPLATE.format(question=question)
+    # Pass each pre-extracted PIL frame as a separate {"type": "image"} entry,
+    # matching the same convention used by gemma4 and internvl3_5.
+    image_content = [{"type": "image", "image": frame} for frame in frames]
+    messages = [
+        {
+            "role": "user",
+            "content": image_content + [{"type": "text", "text": prompt}],
+        }
+    ]
+    inputs = processor.apply_chat_template(
+        messages,
+        tokenize=True,
+        add_generation_prompt=True,
+        return_dict=True,
+        return_tensors="pt",
+    ).to(model.device)
+    # skip_special_tokens=False is required by the official model card: the thinking
+    # output uses <think>...</think> tags which are special tokens.  We extract the
+    # final answer from those tags rather than returning the raw reasoning chain.
+    # 512 tokens accommodates a full think block without the 8192 default overhead.
+    with torch.no_grad():
+        output_ids = model.generate(**inputs, max_new_tokens=512, do_sample=False)
+    raw = processor.decode(
+        output_ids[0][inputs["input_ids"].shape[1]:],
+        skip_special_tokens=False,
+    ).strip()
+    # Prefer explicit <answer> tag; fall back to text after </think>; else return raw.
+    matches = re.findall(r"<answer>(.*?)</answer>", raw, re.DOTALL)
+    if matches:
+        return matches[-1].strip()
+    think_split = re.split(r"</think>", raw, maxsplit=1)
+    if len(think_split) == 2:
+        return think_split[1].strip()
+    return raw
+
+
 # ─── Model registry ───────────────────────────────────────────────────────────
 
 MODEL_REGISTRY = {
@@ -473,6 +524,11 @@ MODEL_REGISTRY = {
         "model_id": "google/gemma-4-26B-A4B-it",
         "load_fn": load_gemma4,
         "infer_fn": infer_gemma4,
+    },
+    "glm4_1v": {
+        "model_id": "zai-org/GLM-4.1V-9B-Thinking",
+        "load_fn": load_glm4_1v,
+        "infer_fn": infer_glm4_1v,
     },
 }
 

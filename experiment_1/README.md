@@ -1,6 +1,6 @@
 # Experiment 1: EgoBlind Hallucination Evaluation
 
-Evaluates 6 open-source MLLMs on the EgoBlind benchmark to measure how often they
+Evaluates 7 open-source MLLMs on the EgoBlind benchmark to measure how often they
 hallucinate answers on unanswerable video QA questions (where the ground truth is "I don't know").
 
 ---
@@ -34,11 +34,18 @@ conda activate exp1
 pip install -r requirements.txt
 ```
 
-**Qwen3-VL / Gemma 4 / InternVL3.5 environment** (requires `transformers>=4.57.0`, separate from the others):
+**Qwen3-VL / Gemma 4 / InternVL3.5 environment/ Videochat_r1** (requires `transformers>=4.57.0`, separate from the others):
 ```bash
 conda create -n exp1_qwen3 python=3.10 -y
 conda activate exp1_qwen3
 pip install -r requirements_qwen3_vl.txt
+```
+
+**GLM-4.1V-9B-Thinking environment** (requires `transformers>=4.57.1`):
+```bash
+conda create -n exp1_glm python=3.10 -y
+conda activate exp1_glm
+pip install -r requirements_glm.txt
 ```
 
 InternVL2.5 requires `flash-attn`. Building from source fails on Palmetto due to
@@ -95,8 +102,10 @@ J4=$(sbatch --parsable slurm/job_qwen2_5_vl.sh)
 J5=$(sbatch --parsable slurm/job_qwen3_vl.sh)
 J6=$(sbatch --parsable slurm/job_gemma4.sh)
 J7=$(sbatch --parsable slurm/job_internvl3_5.sh)
+J8=$(sbatch --parsable slurm/job_videochat_r1.sh)
+J9=$(sbatch --parsable slurm/job_glm4_1v.sh)
 
-echo "Submitted jobs: $J1 $J2 $J3 $J4 $J5 $J6 $J7"
+echo "Submitted jobs: $J1 $J2 $J3 $J4 $J5 $J6 $J7 $J8 $J9"
 ```
 
 Monitor progress:
@@ -110,10 +119,10 @@ tail -f logs/qwen2_5_vl_<jobid>.out
 ```bash
 # Replace your OpenAI API key in slurm/job_evaluate.sh first!
 # Then:
-sbatch --dependency=afterok:${J1}:${J2}:${J3}:${J4}:${J5}:${J6}:${J7} slurm/job_evaluate.sh
+sbatch --dependency=afterok:${J1}:${J2}:${J3}:${J4}:${J5}:${J6}:${J7}:${J8}:${J9} slurm/job_evaluate.sh
 ```
 
-This runs `eval.py` (the official EgoBlind evaluator) for all 7 models, then
+This runs `eval.py` (the official EgoBlind evaluator) for all 9 models, then
 `02_analyze_hallucination.py` to compute IDK Rate and Hallucination Rate.
 
 ---
@@ -151,3 +160,6 @@ checks which `question_id`s are already in the output JSONL and skips them.
   have the flash-attn wheel installed; uses `Frame{i}: <image>` token format for video frames
 - **Gemma 4 is gated** — accept terms at `huggingface.co/google/gemma-4-26B-A4B-it` and run
   `huggingface-cli login` before pre-downloading
+- **GLM-4.1V-9B-Thinking** uses its own `exp1_glm` conda env (`requirements_glm.txt`,
+  `transformers>=4.57.1`); reasoning model — answers extracted from `<answer>` tags or
+  post-`</think>` content, `max_new_tokens=512`

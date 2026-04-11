@@ -24,6 +24,7 @@ MODELS = [
     {"name": "Qwen3-VL",         "model_id": "Qwen/Qwen3-VL-8B-Instruct"},
     {"name": "Gemma4-26B-A4B-it",       "model_id": "google/gemma-4-26B-A4B-it"},
     {"name": "VideoChat-R1-thinking-7B", "model_id": "OpenGVLab/VideoChat-R1-thinking_7B"},
+    {"name": "GLM-4.1V-9B-Thinking",    "model_id": "zai-org/GLM-4.1V-9B-Thinking"},
 ]
 
 
