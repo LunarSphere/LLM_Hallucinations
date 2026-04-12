@@ -15,7 +15,7 @@
 #   sbatch --dependency=afterok:<j1>:<j2>:<j3>:<j4>:<j5>:<j6>:<j7>:<j8>:<j9> slurm/job_evaluate.sh
 
 module load anaconda3/2023.09
-conda activate exp1
+source activate exp1
 
 source /home/jjtribb/LLM_Hallucinations/experiment_1/scripts/set_cache_dirs.sh
 export OPENAI_API_KEY="<your_openai_api_key_here>"
