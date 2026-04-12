@@ -25,15 +25,16 @@ cd /home/jjtribb/LLM_Hallucinations/experiment_1
 mkdir -p outputs/evaluations
 
 # Run eval.py (from EgoBlind repo, cloned into experiment_1/) for each model
+# eval.py only accepts --pred_path and --test_path; it derives model_name from the
+# prediction filename and writes result_{model}.json relative to CWD.
+# Run from outputs/evaluations/ so output lands there.
 for model in videollama3 internvl2_5 internvl3_5 llava_onevision qwen2_5_vl videochat_r1 qwen3_vl gemma4 glm4_1v; do
-    pred_file="outputs/predictions/${model}.jsonl"
+    pred_file="/home/jjtribb/LLM_Hallucinations/experiment_1/outputs/predictions/${model}.jsonl"
     if [ -f "$pred_file" ]; then
         echo "Evaluating $model..."
-        python eval.py \
+        (cd outputs/evaluations && python ../../eval.py \
             --pred_path "$pred_file" \
-            --test_path data/test_half_release.csv \
-            --output_dir outputs/evaluations \
-            --model_name "$model"
+            --test_path /home/jjtribb/LLM_Hallucinations/experiment_1/data/test_half_release.csv)
     else
         echo "WARNING: Predictions file not found for $model: $pred_file"
     fi

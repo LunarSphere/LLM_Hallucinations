@@ -97,14 +97,16 @@ def load_predictions(pred_path: Path) -> dict:
 
 
 def load_results(results_path: Path) -> dict:
-    """Load eval.py results JSON: question_id -> {'pred': 'yes/no', 'score': float}"""
+    """Load eval.py results JSON: question_id -> {'pred': 'yes/no', 'score': float}
+    eval.py stores each entry as [response_dict, qa_set]; unwrap to response_dict only."""
     with open(results_path, "r") as f:
-        return json.load(f)
+        data = json.load(f)
+    return {k: v[0] if isinstance(v, list) else v for k, v in data.items()}
 
 
 def analyze_model(model_name: str, df: pd.DataFrame, results_dir: Path, pred_dir: Path) -> dict:
     """Compute all metrics for a single model."""
-    results_file = results_dir / f"results_{model_name}.json"
+    results_file = results_dir / f"result_{model_name}.json"
     pred_file = pred_dir / f"{model_name}.jsonl"
 
     if not pred_file.exists():
