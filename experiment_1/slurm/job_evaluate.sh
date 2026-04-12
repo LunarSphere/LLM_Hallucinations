@@ -5,14 +5,14 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
-#SBATCH --time=02:00:00
+#SBATCH --time=04:00:00
 #SBATCH --output=logs/evaluate_%j.out
 #SBATCH --error=logs/evaluate_%j.err
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=jjtribb@clemson.edu
 
-# Submit this job with a dependency on all 5 inference jobs:
-#   sbatch --dependency=afterok:<j1>:<j2>:<j3>:<j4>:<j5> slurm/job_evaluate.sh
+# Submit this job with a dependency on all inference jobs:
+#   sbatch --dependency=afterok:<j1>:<j2>:<j3>:<j4>:<j5>:<j6>:<j7>:<j8>:<j9> slurm/job_evaluate.sh
 
 module load anaconda3/2023.09
 conda activate exp1
@@ -25,7 +25,7 @@ cd /home/jjtribb/LLM_Hallucinations/experiment_1
 mkdir -p outputs/evaluations
 
 # Run eval.py (from EgoBlind repo, cloned into experiment_1/) for each model
-for model in videollama3 internvl2_5 llava_onevision qwen2_5_vl; do
+for model in videollama3 internvl2_5 internvl3_5 llava_onevision qwen2_5_vl videochat_r1 qwen3_vl gemma4 glm4_1v; do
     pred_file="outputs/predictions/${model}.jsonl"
     if [ -f "$pred_file" ]; then
         echo "Evaluating $model..."

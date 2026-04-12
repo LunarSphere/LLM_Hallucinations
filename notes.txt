@@ -44,3 +44,16 @@ Some of our videos are corrupt
 video id v_01051 and v_01306 are corrupt 
 one has a bad codec packet the other leaves the video decoder in a bad state causing subsequent videos to fail as well.
 bad_ids = {'v_01051_1', 'v_01306_2', 'v_01306_3', 'v_01306_4', 'v_01306_6', 'v_01306_7', 'v_01306_8', 'v_01306_9'}
+
+
+These two models look interesting, but they are difficult to run on the cluster 
+https://huggingface.co/nvidia/omnivinci
+
+
+papers I used to figure what papers are relvent to my research:
+https://arxiv.org/pdf/2510.10689 : CrossVid: A Comprehensive Benchmark for Evaluating Cross-Video Reasoning in
+Multimodal Large Language Models
+https://arxiv.org/pdf/2510.10689 : OmniVideoBench: Towards Audio-Visual Understanding
+Evaluation for Omni MLLMs
+
+https://github.com/yunlong10/Awesome-LLMs-for-Video-Understanding/tree/main?tab=readme-ov-file
